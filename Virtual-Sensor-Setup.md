@@ -273,58 +273,80 @@ ping 10.107.x.x
 ---
 
 ## Step 9 — Configure WireGuard on the Jetson (Optional)
-
-This step connects the Jetson Orin Nano directly to the GL.iNet router over Wi-Fi so it can reach the camera through the local network.
-
+ 
+This step connects the Jetson Orin Nano directly to the GL.iNet router over Wi-Fi and joins it to the Sage WireGuard network, so it can reach the camera locally and be reachable by the Sage team.
+ 
 ### 9a. Connect the Jetson to the Router's Wi-Fi
-
+ 
 1. Plug a Wi-Fi dongle into the Jetson Orin Nano.
 2. Verify it is recognized as `wlan0`:
-
 ```bash
 iwconfig
 ```
-
+ 
 3. Connect to the GL.iNet router's Wi-Fi:
-
 ```bash
 sudo nmcli dev wifi connect "GL-MT1300-7ec" password "[router wifi password]"
 ```
-
-<!-- FLAG: Original had the router Wi-Fi password hardcoded. Replaced with placeholder — same concern as above if this is a public repo. -->
-
+ 
+<!-- FLAG: Original had the router Wi-Fi password hardcoded. Replaced with a placeholder — same concern as above if this is a public repo. -->
+ 
 4. Note the Jetson's IP address:
-
 ```bash
 hostname -I
 ```
-
-5. SSH into the Jetson from your laptop:
-
+ 
+5. SSH into the Jetson from your laptop, using the IP address from the previous step:
 ```bash
 ssh orin-nano@<JETSON_IP>
 ```
-
-### 9b. Install the WireGuard Configuration on the Jetson
-
-Install the WireGuard configuration file provided by the Sage team and enable the tunnel.
-
+ 
+### 9b. Connect the Jetson to the Sage WireGuard Network
+ 
+1. Install WireGuard on the Jetson:
+```bash
+sudo apt install wireguard -y
+```
+ 
+2. Generate a WireGuard configuration for the Jetson through the router's admin panel:
+   1. Open the GL.iNet admin page at `http://192.168.8.1`.
+   2. Navigate to **VPN → WireGuard Server → Profiles**.
+   3. Enter a name for the profile and click **Apply**.
+   4. Click **Configuration File** and copy the generated configuration.
+3. Create the config file on the Jetson:
+```bash
+sudo nano /etc/wireguard/wg0.conf
+```
+ 
+   Paste in the configuration copied in the previous step, then save and exit.
+ 
+4. Set the WireGuard zone's forward policy to `accept` (required for peer-to-peer routing — this defaults to `drop`, which will silently block traffic):
+   1. Open the GL.iNet admin page at `http://192.168.8.1`.
+   2. Navigate to **More Settings → Advanced**.
+   3. Click the blue link to open LuCI.
+   4. At the top of the page, click **Network**.
+   5. Edit the WireGuard zone and change **Forward** from `drop` to `accept`.
+   6. Click **Save & Apply**.
+5. Start the WireGuard tunnel on the Jetson:
+```bash
+sudo wg-quick up wg0
+```
+ 
 > **Do not include any private keys** in screenshots, notes, or any files you submit or share.
-
-*(ADD IMAGE: Jetson terminal or WireGuard status showing the tunnel active)*
-
+ 
 **Required Screenshot — `08-wireguard-jetson.png`**
 Must show:
 - Tunnel enabled
 - Assigned VPN address
 - Peer configured
-
+*(ADD IMAGE: Jetson terminal or WireGuard status showing the tunnel active)*
+ 
 ---
-
+ 
 ## Step 10 — Submit Deployment Info to the Sage Team
-
-Create a file named `deployment-notes.txt` in your deployment directory:
-
+ 
+Create a file named `deployment-notes.txt` in your deployment directory and fill in the following:
+ 
 ```
 Site Name:
 Camera Model:
@@ -334,25 +356,49 @@ Camera LAN IP:
 Forwarded Port:
 WireGuard Public Key:
 ```
-
+ 
+Also provide the following directly to the Sage team:
+ 
+- Camera model
+- Camera serial number (optional)
+- Router model
+- Router WireGuard public key
 ---
-
+ 
 ## Step 11 — Verify VPN Connectivity
-
+ 
 After the Sage team provisions the VPN connection, confirm the WireGuard tunnel is active and the camera is reachable through it.
-
-Check the tunnel status in the GL.iNet admin panel under **VPN → WireGuard Client**, or run the following on the Jetson:
-
+ 
+1. **Check tunnel status.**
+   Run:
 ```bash
-sudo wg show
+   sudo wg show
 ```
-
+   Confirm a recent handshake (within the last ~2 minutes) and nonzero data sent/received.
+ 
+2. **Ping the camera through the tunnel.**
+   From the Sage node (or your machine, if peered), ping the camera's LAN IP:
+```bash
+   ping 192.168.8.XXX
+```
+   A successful reply confirms the tunnel is routing traffic to the router's LAN.
+ 
+3. **Pull the RTSP stream.**
+   Test the stream directly with `ffplay` or VLC:
+```bash
+   ffplay rtsp://admin:<password>@<camera_LAN_IP>:554/h264Preview_01_main
+```
+   If this loads video, the camera is fully reachable through the VPN.
+ 
+4. **Confirm in the GL.iNet UI.**
+   Open `http://192.168.8.1` → **VPN → WireGuard** and check that the tunnel shows **Connected** with a recent handshake, matching what `wg show` reported.
 **Required Screenshot — `09-wireguard-connected.png`**
 Must show:
 - Tunnel status: Connected
 - Latest handshake
 - Data sent and received
-
+Take this from either the `sudo wg show` output or the GL.iNet WireGuard status panel.
+ 
 Example:
 ```
 Status: Connected
