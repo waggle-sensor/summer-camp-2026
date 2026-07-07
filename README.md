@@ -126,6 +126,12 @@ By the end of the week, every participant should have:
 
 ---
 
+## Setting up your Agent
+
+To set up your personal agent, follow the instructions in the [Hermes Agent Setup Guide](hermes-agent.md).
+
+---
+
 ## Sage Virtual Sensors
 
 A total of 4 devices act as virtual sensors.
