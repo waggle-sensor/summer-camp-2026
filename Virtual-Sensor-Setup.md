@@ -214,7 +214,7 @@ cat client_public.key
 
 ```ini
 [Interface]
-Address = 10.107.0.xxx/32 (IP address provided by Sage team)
+Address = 10.107.x.x/32 (IP address provided by Sage team)
 PrivateKey = <your private key from step 5>
 DNS = <DNS address from CS IT, or use 8.8.8.8>
 MTU = 1420
