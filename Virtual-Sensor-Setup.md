@@ -195,7 +195,7 @@ Must show:
 ## Step 6 — Configure the WireGuard Client (Connect to Sage VPN)
 
 1. In the GL.iNet admin panel, go to **VPN → WireGuard Client**.
-2. Click the blue **Add Configuration** button (this might say **New Group** then **Manually Add Configuration** instead).
+2. Click the blue **Add Configuration** button (you might have to click "**Add Manually**" then **Manually Add Configuration** instead).
 3. On a Linux machine, generate a WireGuard key pair:
 
 ```bash
@@ -223,7 +223,7 @@ MTU = 1420
 AllowedIPs = 10.107.0.0/16
 Endpoint = vpn.sagecontinuum.org:51821
 PersistentKeepalive = 25
-PublicKey = <Sage server public key — provided by Sage team>
+PublicKey = qTFbhaYXOwjqfIVzqgHwHMD59e/ny9Gr47W2yOnjSnk=
 ```
 
 7. Name the configuration and click **Apply**. The router is now connected to the Sage VPN.
