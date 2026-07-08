@@ -261,7 +261,6 @@ Set up a port forwarding rule so that incoming traffic through the WireGuard tun
 | Internal Zone | LAN |
 | Internal IP | Your camera's reserved IP address |
 | Internal Port | `554` (RTSP) |
-<img width="1287" height="450" alt="image" src="https://github.com/user-attachments/assets/70ac7b74-8fbb-4066-8e8f-dc681644836f" />
 
 4. Click **Apply** and exit.
 
