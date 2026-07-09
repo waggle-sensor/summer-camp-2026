@@ -111,7 +111,7 @@ The camp maintains a Hermes **profile distribution** in this repo at [`hermes-pr
 `hermes profile install github.com/org/repo` clones the **repo root** as the distribution — it does not support subpaths. Since the profile lives inside this monorepo, clone first:
 
 ```bash
-git clone https://github.com/<org>/summer-camp-2026.git
+git clone https://github.com/FranciscoLozCoding/summer-camp-2026.git
 cd summer-camp-2026
 hermes profile install ./hermes-profile --name sage --alias
 ```
@@ -121,7 +121,7 @@ hermes profile install ./hermes-profile --name sage --alias
 If `hermes-profile/` is published as its own repository:
 
 ```bash
-hermes profile install github.com/<org>/sage-hermes --alias
+hermes profile install github.com/FranciscoLozCoding/sage-hermes --alias
 ```
 
 ### What happens on install
@@ -320,6 +320,28 @@ tmux new -s hermes -d 'sage'
 tmux attach -t hermes
 ```
 
+### Tmux scrollback (save session transcripts)
+
+Long Hermes sessions can scroll past the default buffer. Increase scrollback once on the Thor:
+
+```bash
+echo 'set-option -g history-limit 50000' >> ~/.tmux.conf
+# Restart tmux server or start a new session for the setting to take effect
+```
+
+**Save a full session transcript** — from **inside** the `hermes` tmux session (after `tmux attach -t hermes`):
+
+```bash
+chmod +x ~/summer-camp-2026/scripts/write-tmux.sh   # once
+~/summer-camp-2026/scripts/write-tmux.sh
+```
+
+The script captures the full scrollback (with ANSI colors) to `~/AI-projects/tmux-logs/transcript_<timestamp>.ansi`. View with:
+
+```bash
+less -R ~/AI-projects/tmux-logs/transcript_*.ansi
+```
+
 ---
 
 ## Step 6 — Reconfigure later (optional)
@@ -507,12 +529,12 @@ SSH into the new Thor as your Linux user, install the Hermes CLI ([Part 1, Step 
 
 ```bash
 # From the camp repo
-git clone https://github.com/<org>/summer-camp-2026.git
+git clone https://github.com/FranciscoLozCoding/summer-camp-2026.git
 cd summer-camp-2026
 hermes profile install ./hermes-profile --name sage --alias
 
 # Or directly from git (standalone profile repo)
-hermes profile install github.com/<org>/<profile-repo> --name sage --alias
+hermes profile install github.com/FranciscoLozCoding/<profile-repo> --name sage --alias
 ```
 
 Fill in your credentials and verify:
