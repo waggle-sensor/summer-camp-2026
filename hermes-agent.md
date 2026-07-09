@@ -1,62 +1,182 @@
 # Hermes Agent Setup Guide
 
-Run **Hermes Agent on your laptop** while inference happens on a **remote GPU** or a **hosted API**. Hermes handles local files, terminal, and tools; the model runs elsewhere.
+Run **Hermes Agent on your Thor** — your laptop is only an SSH client. Hermes handles files, terminal, and tools on the Thor; inference runs on the same machine via **Ollama** (Part 1) or over HTTPS to **NVIDIA Build** (Part 2).
+
+Every participant has their **own Linux account** on the Thor. Hermes installs into your home directory (`~/.hermes/`) — agents are isolated by default. To share config or set up on a new machine, use a **profile distribution** ([Part 3](#part-3-transferring-the-brain)).
 
 | Guide | Best for |
 | ----- | -------- |
-| [Part 1 — Thor + Ollama](#part-1-thor--ollama) | You have SSH access to a Thor GPU with Ollama already running |
-| [Part 2 — NVIDIA Hosted APIs](#part-2-nvidia-hosted-apis) | No Thor GPU — use NVIDIA Build's serverless inference |
-| [Comparison](#thor-vs-nvidia-hosted-apis) | Choosing between the two approaches |
-| [ Switching between the two approaches](#switching-between-the-two-approaches) | Switching between the two approaches |
+| [Part 1 — Thor + Ollama](#part-1-thor--ollama) | Local GPU inference via Ollama on your assigned Thor |
+| [Part 2 — NVIDIA Hosted APIs](#part-2-nvidia-hosted-apis) | Cloud inference via NVIDIA Build (no Ollama needed) |
+| [Part 3 — Transferring the brain](#part-3-transferring-the-brain) | Share agent config or move to a new machine via profile distribution |
+| [Comparison](#thor-vs-nvidia-hosted-apis) | Choosing between the two inference approaches |
+| [Switching between approaches](#switching-between-the-two-approaches) | Swap providers without reinstalling |
 
-**Docs:** [Hermes Documentation](https://hermes-agent.nousresearch.com/docs/)
+**Docs:** [Hermes Documentation](https://hermes-agent.nousresearch.com/docs/) · [Profile Distributions](https://hermes-agent.nousresearch.com/docs/user-guide/profile-distributions)
 
 ---
 
 # Part 1: Thor + Ollama
 
-Hermes runs locally. Model inference goes through an **SSH tunnel** to Ollama on the Thor.
+Hermes and Ollama both run on the Thor. Your laptop connects via SSH and attaches to a tmux session.
 
 ## At a glance
 
 ```
-  Laptop                          Thor GPU
-┌─────────────────────┐           ┌─────────────────────┐
-│  Hermes Agent       │           │  Ollama             │
-│  Local files        │  SSH      │  LLM on NVIDIA GPU  │
-│  Local terminal     │  Tunnel   │                     │
-│  localhost:11434 ───┼──────────►│  localhost:11434    │
-└─────────────────────┘  :11434   └─────────────────────┘
+  Laptop (SSH)                    Thor GPU
+┌──────────────────┐              ┌──────────────────────────┐
+│  Terminal only   │   SSH        │  Hermes Agent            │
+│  tmux attach     │─────────────►│  Ollama (localhost:11434)│
+│                  │              │  Files, terminal, tools  │
+└──────────────────┘              └──────────────────────────┘
 ```
 
-**Flow:** Install Hermes → Open SSH tunnel → Verify connection → Launch
+**Flow:** SSH to Thor → Install Hermes CLI → Install Sage profile → Verify Ollama → Run in tmux
 
 ---
 
 ## Prerequisites
 
-- [ ] Laptop with terminal access
-- [ ] SSH access to a Thor GPU
-- [ ] Ollama installed and running on the Thor
+- [ ] **Your personal Linux account** on the assigned Thor blade (provided by camp organizers)
+- [ ] SSH access: `ssh your-linux-user@thor-host` (use the username you were assigned)
+- [ ] Ollama installed and running on the Thor (shared system service — ask an instructor if it's not running)
 - [ ] At least one model pulled on the Thor (e.g. `gemma4:31b`)
+- [ ] Laptop with a terminal/SSH client only — nothing is installed locally
 
 ---
 
-## Step 1 — Install Hermes
+## Your account, your agent
+
+You SSH in as **your own Linux user** (e.g. `ssh jsmith@thor-host`), not a shared account. Hermes installs entirely under your home directory — no root or sudo needed.
+
+| Shared on Thor | Private to your Linux account |
+| --- | --- |
+| Ollama + GPU inference | `~/.hermes/` (agent brain) |
+| System packages (tmux, etc.) | tmux sessions (Linux isolates per user) |
+| Thor hostname / SSH access | API keys in `~/.hermes/.env` |
+
+- `~/.hermes/` — config, memories, skills, sessions
+- `~/.local/bin/hermes` — CLI binary
+- Other participants on the same Thor have their own `~/.hermes/` — you cannot see or overwrite each other's agents
+- **Ollama is shared** (system-level); each user's Hermes connects to the same `localhost:11434`
+
+---
+
+## Step 1 — SSH into your Thor
+
+```bash
+ssh your-linux-user@thor-host
+```
+
+Replace `your-linux-user` with the Linux username you were assigned and `thor-host` with your blade hostname.
+
+---
+
+## Step 2 — Install Hermes CLI
+
+Install the Hermes CLI into your home directory. Choose **Blank Slate** so the camp profile (Step 3A) provides the configuration.
 
 ```bash
 curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
 ```
 
-During setup, work through the installer in this order. Values marked *example* depend on your Thor model.
+| Choice | Select |
+| ------ | ------ |
+| Setup mode | **3. Blank Slate** — skip the wizard; profile install handles config |
 
-### 1.1 Setup mode
+Reload your shell and verify:
+
+```bash
+source ~/.bashrc   # or ~/.zshrc
+hermes --version
+```
+
+---
+
+## Step 3A — Install Sage profile (recommended)
+
+> **Recommended.** Use this path unless profile install fails or you need a fully custom configuration.
+
+The camp maintains a Hermes **profile distribution** in this repo at [`hermes-profile/`](hermes-profile/). It ships pre-configured SOUL, model settings, tools, and skills. See the [Profile Distributions guide](https://hermes-agent.nousresearch.com/docs/user-guide/profile-distributions) for details.
+
+**What the distribution ships vs. what stays private:**
+
+| Shipped (distribution-owned) | Never shipped (user-owned) |
+| --- | --- |
+| SOUL.md, config.yaml, skills/, mcp.json, cron/ | `memories/`, `sessions/`, `auth.json`, `.env` |
+| Updated via `hermes profile update` | Preserved across updates — your brain stays isolated |
+
+### Install from local clone (recommended)
+
+`hermes profile install github.com/org/repo` clones the **repo root** as the distribution — it does not support subpaths. Since the profile lives inside this monorepo, clone first:
+
+```bash
+git clone https://github.com/<org>/summer-camp-2026.git
+cd summer-camp-2026
+hermes profile install ./hermes-profile --name sage --alias
+```
+
+### Install from standalone git repo (alternative)
+
+If `hermes-profile/` is published as its own repository:
+
+```bash
+hermes profile install github.com/<org>/sage-hermes --alias
+```
+
+### What happens on install
+
+1. Copies distribution files into `~/.hermes/profiles/sage/`
+2. Shows manifest preview (name, version, required env vars)
+3. Marks each `env_requires` key as `✓ set` or `needs setting`
+4. Prompts for confirmation (pass `-y` to skip)
+5. Writes `.env.EXAMPLE` — you copy to `.env`
+6. With `--alias`, creates a `sage` wrapper command
+
+### Post-install
+
+```bash
+hermes profile use sage
+cp ~/.hermes/profiles/sage/.env.EXAMPLE ~/.hermes/profiles/sage/.env
+# Edit .env if needed — add NVIDIA_API_KEY (nvapi-...) for Part 2; leave blank for Thor+Ollama
+hermes profile info sage
+hermes doctor
+```
+
+Launch with `sage` or `hermes -p sage`.
+
+### Pull camp config updates
+
+```bash
+hermes profile update sage
+```
+
+Replaces distribution-owned files (SOUL, skills, cron, mcp.json). **Preserves** your `config.yaml` tweaks and all user data (memories, sessions, `.env`). Pass `--force-config` only to reset config to the distribution default.
+
+> **Security:** SOUL.md and skills are active on first chat. Cron jobs from the distribution are **not** auto-scheduled — run `hermes -p sage cron list` and enable explicitly.
+
+---
+
+## Step 3B — Manual setup (backup)
+
+<details>
+<summary><strong>Backup — manual interactive setup</strong> (use only if profile install fails or you need custom config)</summary>
+
+Run the full installer wizard instead of the camp profile:
+
+```bash
+hermes setup
+```
+
+Work through the installer in this order. Values marked *example* depend on your Thor model.
+
+### Setup mode
 
 | Choice | Select |
 | ------ | ------ |
 | Setup mode | **2. Full setup** — configure providers and tools yourself |
 
-### 1.2 Model provider
+### Model provider
 
 | Field | Value |
 | ----- | ----- |
@@ -65,9 +185,9 @@ During setup, work through the installer in this order. Values marked *example* 
 | API key | Leave blank |
 | Compatibility mode | **1. Auto-detect** |
 
-> **Why `127.0.0.1`?** Hermes talks to Ollama through the SSH tunnel (Step 2), which forwards your laptop's port 11434 to the Thor.
+> **Why `127.0.0.1`?** Hermes and Ollama run on the same Thor — no SSH tunnel needed.
 
-### 1.3 Model settings (*example*)
+### Model settings (*example*)
 
 | Field | Example value | Notes |
 | ----- | ------------- | ----- |
@@ -75,14 +195,14 @@ During setup, work through the installer in this order. Values marked *example* 
 | Context length | `256000` | Match your model's limit |
 | Display name | `sage-thor-H020-gemma4-31b` | Any label that helps you identify this endpoint |
 
-### 1.4 Terminal & platforms
+### Terminal & platforms
 
 | Prompt | Select |
 | ------ | ------ |
-| Terminal backend | **Keep current (local)** |
+| Terminal backend | **Keep current (local)** — tools run on the Thor filesystem |
 | Platforms (Mattermost, Slack, etc.) | Skip — press **Enter** |
 
-### 1.5 CLI tools
+### CLI tools
 
 Enable these tools (toggle with **Space**, confirm with **Enter**):
 
@@ -106,7 +226,7 @@ Enable these tools (toggle with **Space**, confirm with **Enter**):
 
 Leave video generation, image generation, and integrations you don't need unchecked.
 
-### 1.6 Provider choices
+### Provider choices
 
 | Category | Select |
 | -------- | ------ |
@@ -114,81 +234,42 @@ Leave video generation, image generation, and integrations you don't need unchec
 | Text-to-Speech | **Microsoft Edge TTS** (free) |
 | Web Search | **DuckDuckGo (ddgs)** (free, no API key) |
 
-### 1.7 Finish install
-
-You should see a setup summary and **Installation Complete**. Some tools may show as disabled until you add API keys later — that's expected.
+### Finish install
 
 Reload your shell and verify:
 
 ```bash
-source ~/.zshrc   # or your shell config file
+source ~/.bashrc
 hermes --version
 ```
 
-<details>
-<summary>Full installer prompts (reference)</summary>
+**Full installer prompts (reference):**
 
-**Setup mode:**
 ```
 (○) 1. Quick Setup (Nous Portal)
 (●) 2. Full setup
 (○) 3. Blank Slate
-```
 
-**Custom endpoint:**
-```
 API base URL: http://127.0.0.1:11434/v1
 API key: <leave blank>
 Choice [1-4]: 1   # Auto-detect
-```
 
-**Model:**
-```
 Model name: gemma4:31b
 Context length: 256000
 Display name: sage-thor-H020-gemma4-31b
 ```
 
-**Expected completion output:**
-```
-┌─────────────────────────────────────────────────────────┐
-│              ✓ Installation Complete!                   │
-└─────────────────────────────────────────────────────────┘
-
-   hermes              Start chatting
-   hermes gateway      Start messaging gateway
-   hermes doctor       Check for issues
-```
+> **Note:** Browser automation on a headless Thor may need extra setup (local browser vs. MCP). This is optional — not required for core agent use.
 
 </details>
 
 ---
 
-## Step 2 — Open the SSH tunnel
+## Step 4 — Verify Ollama on the Thor
 
-Replace `username` and `thor-host` with your credentials:
+Run these on the Thor (in your SSH session):
 
-```bash
-ssh -L 11434:127.0.0.1:11434 username@thor-host
-```
-
-**Keep this terminal open** while using Hermes.
-
-```
-Laptop localhost:11434
-        │
-        │  SSH Tunnel
-        ▼
-Thor   localhost:11434
-```
-
----
-
-## Step 3 — Verify the connection
-
-Open a **new terminal** on your laptop (leave the tunnel running).
-
-**List models on the Thor:**
+**List models:**
 
 ```bash
 curl http://127.0.0.1:11434/api/tags
@@ -204,31 +285,50 @@ If both return model data, Hermes can connect.
 
 ---
 
-## Step 4 — Reconfigure later (optional)
+## Step 5 — Run Hermes in tmux
 
-Already set up? Add or change models anytime:
+tmux keeps Hermes running after you close your laptop or drop SSH.
 
-```bash
-hermes model
-```
-
-First-time setup after install:
+**Check tmux is available** (should be pre-installed):
 
 ```bash
-hermes setup
+tmux -V
 ```
 
-Use the same values from [Step 1](#step-1--install-hermes). Run `hermes model` again whenever you add another Thor endpoint.
+> If tmux is missing, ask an instructor. Participants typically have no sudo. Each user's tmux sessions are isolated by Linux — you don't need a unique session name to avoid collisions with other participants.
+
+**Start and detach:**
+
+```bash
+tmux new -s hermes
+# Inside the session:
+sage          # or: hermes -p sage   (if you used profile install)
+# or: hermes       (if you used manual setup)
+
+# Detach: Ctrl-b then d
+# Reattach from any SSH session:
+tmux attach -t hermes
+
+# List sessions:
+tmux ls
+```
+
+**Optional detached start:**
+
+```bash
+tmux new -s hermes -d 'sage'
+tmux attach -t hermes
+```
 
 ---
 
-## Step 5 — Launch Hermes
+## Step 6 — Reconfigure later (optional)
 
 ```bash
-hermes
+hermes model              # add or change model providers
+hermes setup              # re-run setup wizard
+hermes profile update sage   # pull camp profile updates
 ```
-
-Hermes connects through the tunnel to Ollama on the Thor GPU. Local tools (files, terminal, browser) still run on your laptop.
 
 ---
 
@@ -236,15 +336,22 @@ Hermes connects through the tunnel to Ollama on the Thor GPU. Local tools (files
 
 | Check | Command |
 | ----- | ------- |
-| Tunnel active? | `curl http://127.0.0.1:11434/api/tags` |
+| Ollama running? | `curl http://127.0.0.1:11434/api/tags` |
 | OpenAI endpoint? | `curl http://127.0.0.1:11434/v1/models` |
 | Hermes health | `hermes doctor` |
+| Reattach agent | `tmux attach -t hermes` |
 
 **If Hermes can't connect:**
 
-1. Confirm the SSH tunnel terminal is still open.
-2. Confirm Ollama is running on the Thor.
-3. Confirm the model name in Hermes matches a model from `/v1/models`.
+1. Confirm Ollama is running on the Thor (ask an instructor).
+2. Confirm the model name in Hermes matches a model from `/v1/models`.
+3. Run `hermes doctor` and check your profile config.
+
+**tmux issues:**
+
+- Thor rebooted → SSH back in and `tmux new -s hermes`
+- Closed laptop → `tmux attach -t hermes` (agent keeps running on Thor)
+- Can't see another user's session → expected; tmux sessions are per Linux account
 
 To enable more tools later: `hermes setup tools` or edit `~/.hermes/.env`.
 
@@ -252,28 +359,29 @@ To enable more tools later: `hermes setup tools` or edit `~/.hermes/.env`.
 
 # Part 2: NVIDIA Hosted APIs
 
-No Thor GPU required. Hermes talks to **NVIDIA Build** over HTTPS using an OpenAI-compatible API.
+Hermes runs on the Thor and talks to **NVIDIA Build** over HTTPS. No Ollama required.
 
 ## At a glance
 
 ```
-  Laptop                    NVIDIA Build
-┌──────────────────┐        ┌──────────────────────────┐
-│  Hermes Agent    │  HTTPS │  integrate.api.nvidia    │
-│  Local files     │───────►│  Managed GPU inference   │
-│  Local terminal  │  TLS   │  OpenAI-compatible API   │
-└──────────────────┘        └──────────────────────────┘
+  Laptop (SSH)              Thor                    NVIDIA Build
+┌──────────────┐     ┌──────────────────┐        ┌──────────────────────────┐
+│  tmux attach │ SSH │  Hermes Agent    │  HTTPS │  integrate.api.nvidia    │
+│              │────►│  (your account)  │───────►│  Managed GPU inference   │
+└──────────────┘     └──────────────────┘  TLS   └──────────────────────────┘
 ```
 
-No SSH tunnel. No Ollama. No GPU to manage.
+No SSH tunnel. No Ollama. No local GPU to manage.
 
 ---
 
 ## Prerequisites
 
+- [ ] SSH access to your Thor with Hermes installed ([Part 1](#part-1-thor--ollama))
 - [ ] NVIDIA Developer account
 - [ ] API key from [NVIDIA Build](https://build.nvidia.com/settings/api-keys)
-- [ ] Hermes installed on your laptop ([Step 1 in Part 1](#step-1--install-hermes))
+
+If you used the camp profile (Step 3A), it may already define the NVIDIA provider — you only need to add your API key to `.env`.
 
 ---
 
@@ -292,6 +400,8 @@ Sign in or register at **[NVIDIA Build](https://build.nvidia.com/)**.
 ```text
 nvapi-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
+
+Store it in **your** `~/.hermes/profiles/sage/.env` (or `~/.hermes/.env` for manual setup). API keys are never shared across Linux accounts.
 
 ---
 
@@ -326,15 +436,25 @@ hermes model
 | Base URL | `https://integrate.api.nvidia.com/v1` |
 | Model | Your catalog model ID |
 
+Or add the key directly to `.env`:
+
+```bash
+# ~/.hermes/profiles/sage/.env
+NVIDIA_API_KEY=nvapi-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
 ---
 
 ## Step 5 — Launch Hermes
 
 ```bash
-hermes
+tmux attach -t hermes    # if already running
+# or start fresh:
+tmux new -s hermes
+sage                # or: hermes
 ```
 
-All inference requests go to NVIDIA's hosted infrastructure.
+All inference requests go to NVIDIA's hosted infrastructure from the Thor.
 
 ---
 
@@ -344,8 +464,124 @@ All inference requests go to NVIDIA's hosted infrastructure.
 2. Base URL must be exactly `https://integrate.api.nvidia.com/v1`.
 3. Model ID must match the catalog exactly.
 4. On the free tier, high demand can cause occasional delays.
+5. Confirm the key is in **your** `.env`, not another user's.
 
 **References:** [NVIDIA NIM API](https://build.nvidia.com/) · [API Reference](https://docs.nvidia.com/nim/large-language-models/latest/api-reference.html) · [Forum — connection issues](https://forums.developer.nvidia.com/t/not-connect-to-endpoint-https-integrate-api-nvidia-com-v1/324036)
+
+---
+
+# Part 3: Transferring the brain
+
+Move agent configuration between machines or share it with your team via **profile distributions**. Use `export`/`import` only for local backup on the same machine.
+
+## Mechanisms
+
+| Mechanism | Purpose | Memories/sessions? | Credentials? |
+| --- | --- | --- | --- |
+| **`hermes profile install` / `update`** (distribution) | Team sharing, new Thor, or new machine — install config from git | No | No — each user fills `.env` |
+| **`hermes profile export` / `import`** | Back up or restore a profile **on the same machine** | Yes | No (stripped) |
+
+> **Team sharing and new machines:** Use a profile distribution — push config to git, then run `hermes profile install` or `hermes profile update` on each machine. Do **not** use `export`/`import` for handoffs between people or machines.
+>
+> **Personal memories and sessions are never shared** via distributions. Each Linux account keeps its own brain even when everyone installs the same profile.
+
+**References:** [Hermes Memory](https://hermes-agent.nousresearch.com/docs/user-guide/features/memory) · [Profile Commands](https://hermes-agent.nousresearch.com/docs/reference/profile-commands) · [Profile Distributions](https://hermes-agent.nousresearch.com/docs/user-guide/profile-distributions)
+
+## What makes up the brain
+
+| Component | Location | What it carries |
+| --- | --- | --- |
+| Personality | `SOUL.md` | Agent instructions and tone |
+| Memories | `memories/MEMORY.md`, `USER.md` | Facts and user preferences |
+| Skills | `skills/` | Reusable procedures |
+| Sessions | `state.db` | Conversation history (searchable) |
+| Config | `config.yaml` | Model, tools, settings |
+
+## Profile distribution (team sharing and new machines)
+
+Use this when you want the **same agent configuration** — SOUL, skills, model settings, tools — on multiple machines or Thor blades. Works for teammates, moving to a new Thor, or syncing your agent across machines you own.
+
+### Install on a new machine
+
+SSH into the new Thor as your Linux user, install the Hermes CLI ([Part 1, Step 2](#step-2--install-hermes-cli)), then install the profile:
+
+```bash
+# From the camp repo
+git clone https://github.com/<org>/summer-camp-2026.git
+cd summer-camp-2026
+hermes profile install ./hermes-profile --name sage --alias
+
+# Or directly from git (standalone profile repo)
+hermes profile install github.com/<org>/<profile-repo> --name sage --alias
+```
+
+Fill in your credentials and verify:
+
+```bash
+hermes profile use sage
+cp ~/.hermes/profiles/sage/.env.EXAMPLE ~/.hermes/profiles/sage/.env
+# Edit .env — add your API keys
+hermes profile info sage
+hermes doctor
+```
+
+Memories and sessions from your old machine **do not transfer** — each machine builds its own. Your agent config (SOUL, skills, tools) is what syncs via git.
+
+### Pull updates (teammates or additional machines)
+
+```bash
+hermes profile update sage
+```
+
+Updates replace distribution-owned files (SOUL, skills, cron) but **never** touch `memories/`, `sessions/`, or `.env`.
+
+### Publish changes (authors)
+
+Camp organizers and team leads publish via git — see [Profile Distributions: For authors](https://hermes-agent.nousresearch.com/docs/user-guide/profile-distributions#for-authors-publishing-a-distribution) and the checklist in [`hermes-profile/README.md`](hermes-profile/README.md).
+
+```bash
+# After editing SOUL.md, skills/, config.yaml, etc. in the profile repo:
+git add distribution.yaml SOUL.md skills/ config.yaml
+git commit -m "v1.1.0: updated camp SOUL and skills"
+git tag v1.1.0
+git push --tags
+```
+
+Anyone with the profile installed runs `hermes profile update sage` to pick up the changes.
+
+## Same-machine backup (profile export/import)
+
+Use `export`/`import` to snapshot or restore a profile **on your own machine** — for example before a risky config change, or to duplicate a profile under a new name. This is **not** the recommended way to share with teammates.
+
+**Export:**
+
+```bash
+hermes profile list
+hermes profile export sage -o ~/sage-backup.tar.gz
+```
+
+**Restore on the same machine:**
+
+```bash
+hermes profile import ~/sage-backup.tar.gz --name sage-restored
+hermes profile use sage-restored
+hermes doctor
+```
+
+**After import:**
+
+- Reconfigure API keys in `.env` if needed (credentials are not included in exports)
+- Run `hermes doctor`
+
+## Comparison
+
+| | `profile install` / `update` | `profile export` / `import` |
+| --- | --- | --- |
+| Use case | Team sharing, new Thor, new machine | Local backup (same machine only) |
+| Share with teammates or other machines? | **Yes** (via git) | No |
+| Scope | Distribution config (SOUL, skills, tools) | One profile + memories/sessions |
+| Credentials | No — each user fills `.env` | Stripped |
+| Format | git / local dir | `.tar.gz` |
 
 ---
 
@@ -353,24 +589,33 @@ All inference requests go to NVIDIA's hosted infrastructure.
 
 | | Thor + Ollama | NVIDIA Hosted APIs |
 | --- | --- | --- |
-| **GPU** | Your Thor | None (managed by NVIDIA) |
-| **Setup** | Medium | Low |
-| **SSH tunnel** | Required | Not needed |
+| **Where Hermes runs** | Thor | Thor |
+| **Where inference runs** | Thor (Ollama, local GPU) | NVIDIA Build (cloud) |
+| **Laptop role** | SSH client + tmux attach | SSH client + tmux attach |
+| **SSH tunnel** | Not needed | Not needed |
 | **API key** | Not required | Required (`nvapi-...`) |
-| **Internet** | Only for SSH | Always |
-| **Models** | Any Ollama model you install | NVIDIA catalog only |
-| **Cost** | Your GPU resources | NVIDIA Build credits |
+| **Internet** | Only for SSH | Always (on Thor) |
+| **Models** | Any Ollama model on the Thor | NVIDIA catalog only |
+| **Cost** | Shared Thor GPU | NVIDIA Build credits |
 
-**Choose Thor** when you have GPU access and want full model control.
+**Choose Thor + Ollama** when you want full model control on local GPU hardware.
 
-**Choose NVIDIA** when you want the simplest path — Hermes locally, inference in the cloud.
+**Choose NVIDIA** when you want cloud inference without managing Ollama or local models.
+
+---
 
 # Switching between the two approaches
 
-Once you set up Hermes with both approaches, you can switch between them relatively easily by running the following command:
+Both providers are configured on the Thor. Switch anytime:
 
 ```bash
 hermes model
 ```
 
-Then select the appropriate option from the list of providers. For example, if you want to switch to the NVIDIA Hosted APIs, you would select the **NVIDIA NIM** provider. If you want to switch to the Thor + Ollama approach, you would select the provider with the name you previously gave to the Thor + Ollama approach, so if you called it *sage-thor-H020-gemma4-31b*, you would select that provider.
+Select the appropriate provider:
+
+- **NVIDIA NIM** — for NVIDIA Hosted APIs
+- **sage-thor-H020-gemma4-31b** (or your Thor display name) — for Thor + Ollama
+- **sage** profile — if the camp profile defines both and you switch within it
+
+If using the camp profile, you can also edit `~/.hermes/profiles/sage/.env` and `config.yaml` directly.
