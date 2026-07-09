@@ -1,0 +1,31 @@
+name: "my-plugin-name"
+namespace: "waggle"
+version: "0.1.0"
+description: "Short description of what the plugin does"
+authors: "Your Name <email@example.com>"
+collaborators: ""
+funding: ""
+license: "The license agreed by Argonne National Laboratory"
+keywords: "object detection, machine learning, camera"
+homepage: "https://github.com/your-org/your-plugin"
+source:
+    architectures:
+        - "linux/arm64"      # Wild Sage Nodes (Nvidia Xavier NX)
+        - "linux/amd64"      # Sage Blades / cloud
+    url: "https://github.com/your-org/your-plugin"
+    branch: "main"
+inputs:
+    - id: "stream"
+      type: "string"
+    - id: "continuous"
+      type: "boolean"
+    - id: "sampling-interval"
+      type: "int"
+    - id: "weight"
+      type: "string"
+    - id: "conf-thres"
+      type: "float"
+    - id: "iou-thres"
+      type: "float"
+metadata:
+  ontology: env.count.*

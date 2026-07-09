@@ -1,0 +1,36 @@
+# Sage Edge Job YAML Template
+# Submit with: sesctl create --from-file job.yaml
+# Naming: lowercase letters, numbers, hyphens ONLY (no underscores, uppercase, dots)
+
+name: my-detection-job
+plugins:
+  - name: object-counter
+    pluginSpec:
+      image: registry.sagecontinuum.org/waggle/object-counter:0.5.0
+      args:
+        - "--stream"
+        - "bottom_camera"
+        - "--continuous"
+        - "Y"
+        - "--sampling-interval"
+        - "30"
+nodes:
+  W023:
+  W030:
+
+# Science rules: "action : condition"
+# Actions: schedule(plugin), publish(topic, value), set(var, value=X)
+# Condition functions:
+#   v(measurement, sensor=, since="-1h") — measurement value
+#   time(unit) — current time ("hour", "minute")
+#   cronjob(name, crontab) — cron schedule (name unique per job)
+#   after(name, since="-1d") — true after named event
+#   rate(measurement, since, window, unit) — rate of change
+scienceRules:
+  - "schedule(object-counter): cronjob('run-counter', '*/5 * * * *')"
+  # Conditional: only run when temperature exceeds threshold
+  # - "schedule(object-counter): v('env.temperature') > 30.0"
+
+successcriteria:
+  - WallClock('1day')
+  - Repeat(3)
