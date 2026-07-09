@@ -84,6 +84,9 @@ curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
 | Choice | Select |
 | ------ | ------ |
 | Setup mode | **3. Blank Slate** — skip the wizard; profile install handles config |
+| provider | **34. Leave unchanged** |
+| Terminal backend | **Keep current (local)** |
+| Your minimal agent is ready. What next? | **Start with everything disabled — finish now (most minimal)** |
 
 Reload your shell and verify:
 
@@ -113,6 +116,7 @@ The camp maintains a Hermes **profile distribution** in this repo at [`hermes-pr
 
 ```bash
 git clone https://github.com/FranciscoLozCoding/summer-camp-2026.git
+#git checkout <branch> #if desired
 cd summer-camp-2026
 hermes profile install ./hermes-profile --name sage --alias
 ```
