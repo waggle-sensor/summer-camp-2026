@@ -132,9 +132,9 @@ To set up your personal agent, follow the instructions in the [Hermes Agent Setu
 
 ---
 
-## Sage Virtual Sensors
+## Sage Remote Sensors
 
-A total of 4 devices act as virtual sensors.
+A total of 4 devices act as remote sensors that are connected to Sage nodes via WireGuard.
 
 ## UIC Sage Blades
 
