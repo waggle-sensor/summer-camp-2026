@@ -13,6 +13,7 @@ Every participant has their **own Linux account** on the Thor. Hermes installs i
 | [Part 3 — Transferring the brain](#part-3-transferring-the-brain) | Share agent config or move to a new machine via profile distribution |
 | [Comparison](#inference-options-compared) | Choosing between inference approaches |
 | [Switching between approaches](#switching-between-approaches) | Swap providers without reinstalling |
+| [Token economy](#token-economy) | Manage context, cost, and fair use across providers |
 
 **Docs:** [Hermes Documentation](https://hermes-agent.nousresearch.com/docs/) · [Profile Distributions](https://hermes-agent.nousresearch.com/docs/user-guide/profile-distributions)
 
@@ -768,3 +769,11 @@ Select the appropriate provider:
 - **NVIDIA NIM** — NVIDIA Build hosted APIs
 
 If using the camp profile, you can also edit `~/.hermes/profiles/sage/.env` and `config.yaml` directly.
+
+---
+
+# Token economy
+
+A practical guide for using context, compute, and provider quotas responsibly during summer camp.
+
+[token-economy.md](token-economy.md)
