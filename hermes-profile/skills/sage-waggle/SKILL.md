@@ -36,6 +36,8 @@ Auth tokens: get from `portal.sagecontinuum.org/account/access`. Format: `Author
 
 ## Plugin Development
 
+> **Camp default (Thor):** prefer `sudo pluginctl build .` → `sudo pluginctl run` for on-node development. Start with `references/pluginctl-camp-guide.md`. Use raw `podman build` only for ECR-bypass side-load workflows (see `references/pluginctl-sideload-and-node-build.md`).
+
 Plugins are Docker containers using pywaggle. Minimal pattern:
 
 ```python
@@ -644,6 +646,8 @@ Docker image naming: `registry.sagecontinuum.org/<user>/<plugin-name>:<version>`
 - `references/ecr-plugin-examples.md` — real ECR plugin examples (yolov7-fire): Dockerfile patterns, model hosting options, ECR API for inspecting existing plugins
 - `references/ecr-image-generation.md` — programmatic ECR icon (512×512) and science image (1920×1080) generation with Pillow: design principles, color palettes, pipeline visualization, quality checklist
 - `references/testing-patterns.md` — GPU-based testing: real model inference, pywaggle local output format, test harness utilities, `--image-dir` batch mode pitfalls, meaningful upload filenames, COCO topic name sanitization, `--add-no-detect-text` feature, integration test elimination rationale
+- `references/pluginctl-camp-guide.md` — camp onboarding for pluginctl on Thor: build/run/logs workflow, sudo requirement, Dockerfile rules, vs podman/sesctl
+- `references/pluginctl-sideload-and-node-build.md` — side-load vs SES, registry workarounds, podman import on node
 - `references/direct-node-testing.md` — testing plugins directly on Thor/DGX nodes without Docker: rsync, shared venv, per-plugin run commands, unified memory pitfalls, Samba over Tailscale for Mac Finder access, clean.sh for pre-transfer cleanup
 - `references/docker-build-deploy.md` — building Docker images for Blackwell nodes: base image selection (25.08-py3 for both DGX Spark sm_121 + Thor sm_110), pip constraints file (freeze torch+torchvision+numpy), OpenCV fix, --runtime=nvidia (not --gpus all), NVIDIA Container Toolkit setup, local testing, ECR portal submission, docker-save transfer, pluginctl deploy workflow (including --resource memory for OOMKilled prevention, k3s ctr images import)
 - `references/camera-rtsp-patterns.md` — pywaggle Camera device resolution chain, RTSP URL formats by vendor (Reolink, Axis, Hikvision, Hanwha/Wisenet, ONVIF), HTTP snapshot API (Reolink CGI with low-res params), --snapshot-url flag for HTTP-only cameras, using RTSP with Sage plugins, troubleshooting

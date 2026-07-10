@@ -8,7 +8,7 @@ Install on your Thor following [hermes-agent.md — Step 3A](../hermes-agent.md#
 
 ```text
 hermes-profile/
-├── distribution.yaml    # manifest (name: sage, version 1.0.1)
+├── distribution.yaml    # manifest (name: sage, version 1.0.2)
 ├── SOUL.md              # agent personality + platform domain facts
 ├── config.yaml          # Ollama default + NRP provider pre-wired (gpt-oss)
 ├── mcp.json             # Sage MCP server pre-wired
@@ -27,6 +27,12 @@ hermes-profile/
 - Hermes Agent installed on your Thor ([Part 1, Step 2](../hermes-agent.md#step-2--install-hermes-cli)) — choose **Blank Slate**
 - Ollama running on the Thor with at least one model (e.g. `gemma4:31b`)
 - Your own Linux account on the assigned Thor blade
+
+### Thor tips
+
+- **First response slow?** Default `gemma4:31b` uses the full Ollama context (~262K) — first turn can take 3+ minutes. See [Step 4B — Cap Ollama context](../hermes-agent.md#step-4b--cap-ollama-context-recommended).
+- **Terminal backend is `local` by design** on Thors — avoids Docker/Podman sandbox exit 125 (`catatonit` not installed). See [Troubleshooting (Thor)](../hermes-agent.md#troubleshooting-thor).
+- **Build plugins with `sudo pluginctl build`** for on-node development — not raw `podman build` for first tests. See [pluginctl workflow](../hermes-agent.md#first-plugin-build-on-thor--use-pluginctl).
 
 ## Install
 
@@ -114,9 +120,17 @@ Replaces distribution-owned files (SOUL, skills, mcp.json, docs). **Preserves** 
 
 ## Author / versioning
 
-- Manifest: `distribution.yaml` (`name: sage`, `version: 1.0.1`)
+- Manifest: `distribution.yaml` (`name: sage`, `version: 1.0.2`)
 - Tag releases in git (`git tag v1.0.0`) for version tracking
 - See the [Profile Distributions author guide](https://hermes-agent.nousresearch.com/docs/user-guide/profile-distributions#for-authors-publishing-a-distribution)
+
+### Before camp — Thor fleet prep (optional)
+
+| Action | Why |
+| --- | --- |
+| Pre-create `gemma4-64k` on each Thor | Students skip [Step 4B](../hermes-agent.md#step-4b--cap-ollama-context-recommended) |
+| `apt install catatonit` | Enables Hermes Docker sandbox later |
+| Pre-pull `docker.io/nikolaik/python-nodejs:python3.11-nodejs20` | Podman short-name fix |
 
 ### Reserved profile names
 

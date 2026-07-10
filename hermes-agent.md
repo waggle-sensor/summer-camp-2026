@@ -8,6 +8,7 @@ Every participant has their **own Linux account** on the Thor. Hermes installs i
 | Guide | Best for |
 | ----- | -------- |
 | [Part 1 — Thor + Ollama](#part-1-thor--ollama) | Local GPU inference via Ollama on your assigned Thor |
+| [Step 4B — Cap Ollama context](#step-4b--cap-ollama-context-recommended) | Faster first response on Thor (recommended after install) |
 | [Part 2 — NVIDIA Hosted APIs](#part-2-nvidia-hosted-apis) | Cloud inference via NVIDIA Build (no Ollama needed) |
 | [Part 2B — NRP Managed LLMs](#part-2b-nrp-managed-llms) | Cloud inference via NRP Nautilus (`gpt-oss` default) |
 | [Part 3 — Transferring the brain](#part-3-transferring-the-brain) | Share agent config or move to a new machine via profile distribution |
@@ -45,6 +46,16 @@ Hermes and Ollama both run on the Thor. Your laptop connects via SSH and attache
 - [ ] Ollama installed and running on the Thor (shared system service — ask an instructor if it's not running)
 - [ ] At least one model pulled on the Thor (e.g. `gemma4:31b`)
 - [ ] Laptop with a terminal/SSH client only — nothing is installed locally
+
+### Before camp — Thor fleet prep (organizers, optional)
+
+Camp works without these — the profile defaults to `terminal.backend: local` and students can run [Step 4B](#step-4b--cap-ollama-context-recommended) themselves. Optional fleet actions:
+
+| Action | Why |
+| --- | --- |
+| Pre-create `gemma4-64k` on each Thor (`ollama create` from Modelfile) | Students skip Step 4B |
+| `apt install catatonit` on Thors | Enables Hermes Docker sandbox if desired later |
+| Pre-pull `docker.io/nikolaik/python-nodejs:python3.11-nodejs20` | Podman short-name fix for Docker backend |
 
 ---
 
@@ -292,6 +303,38 @@ If both return model data, Hermes can connect.
 
 ---
 
+## Step 4B — Cap Ollama context (recommended)
+
+On Thor blades, the camp profile defaults to **`gemma4:31b`**. With Ollama's full auto-detected context (~262K tokens), the **first response can take 3–4+ minutes** and Hermes may look frozen. This is a known Thor issue — not a broken install.
+
+**Diagnose:**
+
+```bash
+ollama ps    # CONTEXT column may show 262144
+```
+
+> **Important:** Hermes `context_length` in `config.yaml` only changes the **displayed** limit. It does **not** forward `num_ctx` to Ollama. The Modelfile (below) is what actually caps KV-cache allocation. Verify with `ollama ps`, not the Hermes status bar alone.
+
+**Fix (no sudo)** — create a derived model with a smaller context window:
+
+```bash
+cat > /tmp/gemma-64k.modelfile << 'EOF'
+FROM gemma4:31b
+PARAMETER num_ctx 65536
+EOF
+
+ollama create gemma4-64k -f /tmp/gemma-64k.modelfile
+ollama run gemma4-64k "hi"    # warm load once
+ollama ps                      # expect CONTEXT 65536
+hermes model                   # switch to gemma4-64k
+```
+
+The first response after the model has been idle still pays a ~25–30s model-load cost — that's normal.
+
+**Extended reference:** [Setting Up Hermes on a Sage Thor Node](https://github.com/Miguel-Hernandez1/project-sage-notes/blob/main/docs/03-hermes-on-thor.md) (H00F-tested). See also [Token economy](#token-economy) for shared GPU etiquette.
+
+---
+
 ## Step 5 — Run Hermes in tmux
 
 tmux keeps Hermes running after you close your laptop or drop SSH.
@@ -367,6 +410,7 @@ hermes profile update sage   # pull camp profile updates
 | ----- | ------- |
 | Ollama running? | `curl http://127.0.0.1:11434/api/tags` |
 | OpenAI endpoint? | `curl http://127.0.0.1:11434/v1/models` |
+| Ollama context size? | `ollama ps` |
 | Hermes health | `hermes doctor` |
 | Reattach agent | `tmux attach -t hermes` |
 
@@ -375,6 +419,46 @@ hermes profile update sage   # pull camp profile updates
 1. Confirm Ollama is running on the Thor (ask an instructor).
 2. Confirm the model name in Hermes matches a model from `/v1/models`.
 3. Run `hermes doctor` and check your profile config.
+
+**First response very slow (3+ minutes)?**
+
+See [Step 4B](#step-4b--cap-ollama-context-recommended) — cap context with a `gemma4-64k` Modelfile.
+
+### Hermes Docker sandbox (exit 125) — why camp uses `local` backend
+
+**Symptom:** tool calls fail instantly with `Docker exit status 125`.
+
+**Cause:** on Thors, `docker` is actually **Podman**. Hermes launches its sandbox with Podman's `--init` flag, which requires the **`catatonit`** binary — not installed on current Thors.
+
+**Camp default:** the profile ships `terminal.backend: local` — commands run directly in your Linux account without a container sandbox. This is intentional for camp.
+
+**If you switched to Docker and hit exit 125:**
+
+1. Switch back: `hermes config set terminal.backend local`
+2. Optional fleet fix (ask help desk): `sudo apt install catatonit` and pre-pull `docker.io/nikolaik/python-nodejs:python3.11-nodejs20`
+
+> This is Hermes's **tool sandbox** for shell/file commands — separate from **plugin** container builds via `pluginctl`.
+
+### First plugin build on Thor — use `pluginctl`
+
+For Sage plugin development on a Thor node, use **`pluginctl`** (not raw `podman build` for your first test):
+
+```bash
+git clone <your-plugin-repo>
+cd <plugin-dir>
+sudo pluginctl build .                         # builds + tags to node-local registry
+sudo pluginctl run --name test <image-ref>     # image ref printed by build
+sudo pluginctl logs test
+sudo pluginctl rm test
+```
+
+**Notes:**
+
+- `pluginctl` uses kubeconfig `/etc/rancher/k3s/k3s.yaml` — **`sudo` is required** on Thor for build, run, logs, and rm
+- Use **fully-qualified** base images in Dockerfiles: `FROM docker.io/waggle/plugin-base:1.1.1-base` (Podman on Thor has no short-name registry default)
+- ECR portal builds may still fail (runc bug) — `podman` + `k3s ctr images import` remains the side-load workaround; see the `sage-waggle` skill. **`pluginctl build` is the normal on-node development path.**
+
+**References:** [Sage pluginctl](https://sagecontinuum.org/docs/reference-guides/pluginctl) · [edge-scheduler pluginctl docs](https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/pluginctl#readme) · [Tutorial: building a plugin](https://github.com/waggle-sensor/edge-scheduler/blob/main/docs/pluginctl/tutorial_build.md)
 
 **tmux issues:**
 
@@ -774,6 +858,8 @@ If using the camp profile, you can also edit `~/.hermes/profiles/sage/.env` and 
 
 # Token economy
 
-A practical guide for using context, compute, and provider quotas responsibly during summer camp.
+A practical guide for using context, compute, and provider quotas responsibly during summer camp. Covers `/usage`, `/compress`, provider switching costs, and **Thor-specific Ollama context** (why the first turn can take minutes on `gemma4:31b`).
 
-[token-economy.md](token-economy.md)
+**Full guide:** [token-economy.md](token-economy.md)
+
+**Thor quick fix:** if your first Hermes response takes 3+ minutes, run [Step 4B — Cap Ollama context](#step-4b--cap-ollama-context-recommended) before blaming the agent.
