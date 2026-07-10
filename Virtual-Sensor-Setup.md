@@ -1,4 +1,4 @@
-# Reolink PTZ Camera Deployment + WireGaurd Guide for Sage
+# Reolink PTZ Camera Deployment + WireGuard Guide for Sage
 
 ## Overview
 
