@@ -1,0 +1,113 @@
+PROJECT STATUS — documentation inventory
+=========================================
+Updated: 2026-07-07 (post-consolidation). A map of the observation/design/
+instruction docs across ~/AI-projects/ related to image-sampler2, pywaggle, and
+the Sage/Waggle platform work. Sizes approximate.
+
+CONSOLIDATION DONE (2026-07-07):
+  A. Deduped imagesampler.flint.analysis.txt — deleted the top-level copy, kept
+     the in-repo one (image-sampler2/docs/).
+  B. Split all cross-cutting tracking onto a strict INFRA-vs-PLUGIN axis:
+       - Infra-problems-to-fix.md  = work OUTSIDE the plugins (pywaggle, SES, WES,
+         ECR, Beehive, node/network, dev-env, upstream libs). Now 22 entries.
+       - plugin-improvements.md    = work INSIDE our plugins (image-sampler2,
+         bioclip, yolo, birdnet). NEW.
+     Sage-potential-features.md and sage-infra-issues-2026-06-18.md were sorted
+     into those two and marked SUPERSEDED (retained as historical narrative +
+     verification detail; issue-mapping headers added to each).
+  C. Refreshed image-sampler2/README-image-sampler2.md status (was "Stages 0-3";
+     now v0.5.1, Stages 0-6 + 3.3, with usable-vs-blocked framing).
+  D. Left pywaggle2-design.md and readiness-gap.txt alone (freshest/cleanest).
+
+Legend: TYPE = kind · SCOPE = subject · STATUS = freshness/role.
+
+================================================================================
+AUTHORITATIVE TRACKERS (the two live lists — add new items to THESE)
+================================================================================
+
+FILE                              | SIZE | SCOPE            | ROLE
+----------------------------------+------+------------------+----------------------
+Infra-problems-to-fix.md          | ~37K | Sage platform    | AUTHORITATIVE infra
+                                  |      | (outside plugins)| tracker. 22 entries.
+                                  |      |                  | #2 filed -> waggle-
+                                  |      |                  | edge-stack#110.
+                                  |      |                  | #18 re-verified NOT-A-
+                                  |      |                  | BUG 07-08 (NRP caching
+                                  |      |                  | lag, not file loss).
+plugin-improvements.md            | 9K   | our 4 plugins    | AUTHORITATIVE plugin
+                                  |      | (inside code)    | backlog. IS-*/BC-*/XP-*.
+
+The two cross-reference each other for cross-cutting items (GPU time-share:
+Infra #15 <-> XP-1; self-report: Infra #22 <-> XP-2; creds: Infra #10 <-> XP-4;
+pybioclip: Infra #19 <-> BC-1; resources: Infra #20 <-> BC-2; identity: Infra #1
+<-> IS-6; shared cache: Infra #9/#4.2 <-> IS-7).
+
+================================================================================
+DESIGN / RFC (current source of truth for their scope — leave as-is)
+================================================================================
+
+FILE                              | SIZE | SCOPE            | ROLE
+----------------------------------+------+------------------+----------------------
+pywaggle2-design.md               | 46K  | pywaggle lib     | Camera acquisition
+                                  |      |                  | ladder (+failure
+                                  |      |                  | contract) + node-info
+                                  |      |                  | (mobility, gpsd live-
+                                  |      |                  | read, 2-tier GPS,
+                                  |      |                  | sentinel/None norm) +
+                                  |      |                  | lib enhancements RFC.
+                                  |      |                  | §2.2.4 DECIDED, §7.1 =
+                                  |      |                  | wrap-up steps.
+local-cache-design.md             | 15K  | WES + pywaggle   | Shared /local-cache:
+                                  |      | (infra+lib)      | 2-layer eviction +
+                                  |      |                  | wes-local-cache-mgr
+                                  |      |                  | DaemonSet. Standalone
+                                  |      |                  | RFC. Spans infra+lib.
+image-sampler2/docs/              | 71K  | image-sampler2   | Full LOCKED design.
+  imagesampler.flint.analysis.txt |      |                  | Part 4 OPEN + Part 5
+                                  |      |                  | DEFERRED feed plugin-
+                                  |      |                  | improvements IS-*.
+image-sampler2/readiness-gap.txt  | 6K   | image-sampler2   | Usability blockers/
+                                  |      |                  | limiters/polish; ours
+                                  |      |                  | vs upstream.
+
+================================================================================
+SUPERSEDED (folded into the trackers; retained as historical — do NOT extend)
+================================================================================
+
+FILE                              | SIZE | SUPERSEDED-BY / WHY RETAINED
+----------------------------------+------+---------------------------------------
+Sage-potential-features.md        | 12K  | Sorted into Infra-problems (#1,3,14,15,
+                                  |      | 16,17,22) + plugin-improvements (XP-1..
+                                  |      | 4). Kept for fuller per-item prose.
+sage-infra-issues-2026-06-18.md   | 9K   | Sorted into Infra-problems (#18,3,19,
+                                  |      | 20,21). Kept for verification detail
+                                  |      | (NRP 404 curls, QEMU trace, env table).
+
+================================================================================
+image-sampler2 REPO DOCS (historical record / operational — keep as-is)
+================================================================================
+
+image-sampler2/README-image-sampler2.md   2K   Plugin overview (REFRESHED 07-07).
+image-sampler2/README.md                 0.5K  Stale UPSTREAM readme ("Dec 2020").
+                                               Redundant w/ above. Prune candidate.
+image-sampler2/CHANGELOG.md               42K  Release history. AUTHORITATIVE.
+image-sampler2/docs/IMPLEMENTATION-PLAN.md 14K  Staged build plan (historical).
+image-sampler2/docs/STAGE4-DESIGN-NOTE.md  16K  Per-stage record (ring cache).
+image-sampler2/docs/STAGE5-DESIGN-NOTE.md   9K  Per-stage record (heartbeat).
+image-sampler2/docs/STAGE6-DESIGN-NOTE.md   8K  Per-stage record (from-cache).
+image-sampler2/docs/STAGE3.3-DESIGN-NOTE.md 6K  Per-stage record (self-exit).
+
+================================================================================
+SEPARATE PROJECTS / UNRELATED (listed for completeness only)
+================================================================================
+
+halow-camera.md            7K   DIFFERENT PROJECT — HaLow wildlife cam (Heltec).
+samba-tailscale-setup.md   7K   Infra how-to (Samba over Tailscale). Unrelated.
+
+================================================================================
+REMAINING TIDY-UP (optional, for discussion)
+================================================================================
+- Prune image-sampler2/README.md (stale upstream "Dec 2020" readme, redundant
+  with README-image-sampler2.md) — or replace with a one-line pointer.
+- The per-stage STAGE*-DESIGN-NOTE.md files are historical; could be moved to a
+  docs/archive/ subdir if docs/ feels cluttered. Low priority.

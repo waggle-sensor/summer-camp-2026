@@ -1,0 +1,23 @@
+name: sage
+version: 1.0.2
+description: "Sage Grande Summer Camp 2026 agent — edge computing, Waggle plugins, Thor + Ollama"
+hermes_requires: ">=0.12.0"
+author: "Sage Grande / UIC EVL"
+license: "MIT"
+env_requires:
+  - name: NVIDIA_API_KEY
+    description: "NVIDIA Build API key (nvapi-...) — only if using Nvidia build inference api"
+    required: false
+  - name: NRP_LLM_API_KEY
+    description: "NRP LLM token (Bearer) — only if using NRP Managed LLMs"
+    required: false
+  - name: SAGE_PORTAL_TOKEN
+    description: "Sage portal Bearer token — only for MCP job-submission tools"
+    required: false
+distribution_owned:
+  - SOUL.md
+  - config.yaml
+  - mcp.json
+  - skills/
+  - docs/
+  - distribution.yaml

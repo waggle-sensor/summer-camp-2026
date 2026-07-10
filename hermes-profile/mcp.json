@@ -1,0 +1,9 @@
+{
+  "mcp_servers": {
+    "sage": {
+      "url": "https://mcp.sagecontinuum.org/mcp",
+      "enabled": true,
+      "timeout": 120
+    }
+  }
+}
