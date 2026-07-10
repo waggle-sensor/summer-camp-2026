@@ -576,6 +576,32 @@ git push --tags
 
 Anyone with the profile installed runs `hermes profile update sage` to pick up the changes.
 
+## End of camp — contribute your brain (required)
+
+> **Don't forget:** Before you leave camp, contribute what you learned back to the shared Sage agent.
+
+All week you build a personal **brain** under `~/.hermes/profiles/sage/` — memories, skill tweaks, reference notes, debugging recipes. That knowledge stays on your Thor unless you contribute it. Camp organizers merge student contributions into [`hermes-profile/`](hermes-profile/) so everyone can run `hermes profile update sage` and inherit the improvements.
+
+### How to contribute
+
+1. **Review your brain** on the Thor:
+
+```bash
+ls ~/.hermes/profiles/sage/memories/
+ls ~/.hermes/profiles/sage/skills/
+cat ~/.hermes/profiles/sage/memories/MEMORY.md   # if you wrote memories
+```
+
+2. **Export your brain** to a tarball:
+
+```bash
+hermes profile export sage -o ~/sage-brain-export.tar.gz
+```
+
+3. **Transfer the tarball** to an instructor — never post it in public channels.
+
+4. **Instructors will extract shareable knowledge** and open PRs on your behalf.
+
 ## Same-machine backup (profile export/import)
 
 Use `export`/`import` to snapshot or restore a profile **on your own machine** — for example before a risky config change, or to duplicate a profile under a new name. This is **not** the recommended way to share with teammates.

@@ -99,6 +99,10 @@ hermes -p sage -s sage-waggle
 - `project-status.txt` — current project status
 - `Infra-problems-to-fix.md` — running infra issues list
 
+## End of camp — contribute your brain
+
+Before you leave, contribute what you learned back to this distribution so the shared Sage agent improves for everyone. See **[hermes-agent.md — End of camp](../hermes-agent.md#end-of-camp--contribute-your-brain-required)** for the full checklist.
+
 ## Updates
 
 ```bash

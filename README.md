@@ -66,6 +66,7 @@ By the end of the week, every participant should have:
 - Pushed new code to the ECR and run it on a deployed node
 - Processed a batch of images using an LLM and written the results to Beehive
 - Built and tested a data pipeline connecting two or more sensor streams
+- **Contributed your Hermes agent brain** — contributed your knowledge to [`hermes-profile/`](hermes-profile/) so the shared Sage agent can be updated for future users ([details](hermes-agent.md#end-of-camp--contribute-your-brain-required))
 
 ---
 
