@@ -90,7 +90,7 @@ By the end of the week, every participant should have:
 
    - On Step 2 of the Sage Access Request form, open the **Projects** dropdown and search for **Summer-Camp-2026** and select all of the following permissions. This will covers all the devices you'll need for the hackathon.
 
-<img width="1177" height="539" alt="image" src="https://github.com/user-attachments/assets/17ecda17-ce7f-4b76-889a-475d7b1593bf" />
+   <img width="1177" height="539" alt="image" src="https://github.com/user-attachments/assets/17ecda17-ce7f-4b76-889a-475d7b1593bf" />
 
    - Fill in Section 3 **Project Information** based on your own and your PI's knowledge of the project.
 
