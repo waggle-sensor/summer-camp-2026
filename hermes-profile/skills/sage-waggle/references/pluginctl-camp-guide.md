@@ -4,8 +4,10 @@
 
 Official docs:
 - [Sage pluginctl reference](https://sagecontinuum.org/docs/reference-guides/pluginctl)
-- [edge-scheduler pluginctl README](https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/pluginctl#readme)
+- [edge-scheduler pluginctl tutorials](https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/pluginctl) (README + hello-world, build, logs, env, resources, …)
 - [Tutorial: building a plugin](https://github.com/waggle-sensor/edge-scheduler/blob/main/docs/pluginctl/tutorial_build.md)
+- [Edge apps tutorial series](https://sagecontinuum.org/docs/category/edge-apps) — intro → create → test → publish to ECR
+- **When ready to schedule fleet jobs (`sesctl`):** [Sage sesctl reference](https://sagecontinuum.org/docs/reference-guides/sesctl) · [edge-scheduler sesctl tutorials](https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/sesctl)
 
 Camp setup guide: [hermes-agent.md — pluginctl workflow](../../../../hermes-agent.md#first-plugin-build-on-thor--use-pluginctl)
 

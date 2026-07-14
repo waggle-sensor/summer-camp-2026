@@ -38,6 +38,11 @@ Auth tokens: get from `portal.sagecontinuum.org/account/access`. Format: `Author
 
 > **Camp default (Thor):** prefer `sudo pluginctl build .` → `sudo pluginctl run` for on-node development. Start with `references/pluginctl-camp-guide.md`. Use raw `podman build` only for ECR-bypass side-load workflows (see `references/pluginctl-sideload-and-node-build.md`).
 
+**Official docs (prefer these URLs when citing Sage):**
+- **Edge apps tutorial:** <https://sagecontinuum.org/docs/category/edge-apps>
+- **pluginctl reference:** <https://sagecontinuum.org/docs/reference-guides/pluginctl> · tutorials: <https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/pluginctl>
+- **sesctl reference:** <https://sagecontinuum.org/docs/reference-guides/sesctl> · tutorials: <https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/sesctl>
+
 Plugins are Docker containers using **[pywaggle](https://github.com/waggle-sensor/pywaggle)** — the official Python SDK for Waggle plugins (`waggle.plugin`, cameras, microphones, uploads). Prefer that GitHub repo as the source of truth for API, docs, and source layout (`src/waggle/…`).
 
 **Install:**
@@ -385,6 +390,11 @@ See `references/runtime-packaging-patterns.md` for full details: pod lifecycle t
 
 ## Job Scheduling (sesctl)
 
+**Official docs:**
+- Sage reference: <https://sagecontinuum.org/docs/reference-guides/sesctl>
+- edge-scheduler tutorials: <https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/sesctl>
+- Camp notes (CLI flag reality + ECR catalog gate): `references/sesctl-ecr-validation.md`
+
 ### Science rule syntax
 Format: `action : condition`
 
@@ -642,6 +652,9 @@ Docker image naming: `registry.sagecontinuum.org/<user>/<plugin-name>:<version>`
 
 ## See Also
 
+- **Edge apps (tutorial series):** <https://sagecontinuum.org/docs/category/edge-apps>
+- **pluginctl:** <https://sagecontinuum.org/docs/reference-guides/pluginctl> · <https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/pluginctl>
+- **sesctl:** <https://sagecontinuum.org/docs/reference-guides/sesctl> · <https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/sesctl>
 - **pywaggle (plugin SDK):** <https://github.com/waggle-sensor/pywaggle> — install, Writing a plugin guide, `src/waggle` source. Skill notes on uploads/timestamps assume this package.
 - Monorepo archive: https://github.com/flint-pete/sage-edge-plugins
 - Per-plugin repos (required for ECR submission; each has DOCKER-BUILD.md + THOR-TESTING.md): https://github.com/flint-pete/sage-yolo, sage-bioclip (v0.3.0 = BioCLIP 2.5 Huge, v0.2.1 = BioCLIP 2), sage-vllm, birdnet, image-sampler2. birdnet = BirdNET V2.4 audio classifier (`pip install birdnet`, TFLite CPU ARM64); sources `--input`/`--camera` URL/USB mic; Reolink FLV audio uses QUERY-PARAM auth not basic; auto-detects node location+week. Detail: references/audio-plugin-debugging-birdnet.md, references/birdnet-audio-debugging-and-geofilter.md, references/reolink-audio-capture.md.

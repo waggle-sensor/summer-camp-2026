@@ -1,5 +1,10 @@
 # sesctl job scheduling: CLI reality + ECR-catalog validation
 
+Official docs:
+- [Sage sesctl reference](https://sagecontinuum.org/docs/reference-guides/sesctl)
+- [edge-scheduler sesctl tutorials](https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/sesctl)
+- Related: [pluginctl reference](https://sagecontinuum.org/docs/reference-guides/pluginctl) · [pluginctl tutorials](https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/pluginctl) · [Edge apps](https://sagecontinuum.org/docs/category/edge-apps)
+
 Session-verified notes (H00F, June 2026). The published web docs and this
 skill's older `sesctl` snippet drifted from the actual shipped binary. Always
 run `sesctl <subcmd> --help` to confirm flags.

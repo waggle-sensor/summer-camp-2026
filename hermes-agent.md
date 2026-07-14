@@ -457,7 +457,10 @@ sudo pluginctl rm test
 - Use **fully-qualified** base images in Dockerfiles: `FROM docker.io/waggle/plugin-base:1.1.1-base` (Podman on Thor has no short-name registry default)
 - ECR portal builds may still fail (runc bug) — `podman` + `k3s ctr images import` remains the side-load workaround; see the `sage-waggle` skill. **`pluginctl build` is the normal on-node development path.**
 
-**References:** [Sage pluginctl](https://sagecontinuum.org/docs/reference-guides/pluginctl) · [edge-scheduler pluginctl docs](https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/pluginctl#readme) · [Tutorial: building a plugin](https://github.com/waggle-sensor/edge-scheduler/blob/main/docs/pluginctl/tutorial_build.md)
+**References:**
+- **pluginctl:** [Sage reference](https://sagecontinuum.org/docs/reference-guides/pluginctl) · [edge-scheduler tutorials](https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/pluginctl) · [build tutorial](https://github.com/waggle-sensor/edge-scheduler/blob/main/docs/pluginctl/tutorial_build.md)
+- **Edge apps:** [tutorial series](https://sagecontinuum.org/docs/category/edge-apps)
+- **sesctl** (fleet scheduling after ECR): [Sage reference](https://sagecontinuum.org/docs/reference-guides/sesctl) · [edge-scheduler tutorials](https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/sesctl)
 
 **tmux issues:**
 
