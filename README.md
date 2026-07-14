@@ -1,9 +1,9 @@
-# Summer-Camp-2026
+ # Summer-Camp-2026
 
 Welcome! This guide gets you set up for **Sage Grande: Summer of AI — Hack and Build AI@Edge**.
 
-**Dates:** Monday, July 20 – Tuesday, July 28, 2026
-**Location:** UIC Electronic Visualization Laboratory (EVL), Chicago, IL
+**Dates:** Monday, July 20 – Tuesday, July 28, 2026 \
+**Location:** UIC Electronic Visualization Laboratory (EVL), Chicago, IL \
 **Format:** In-person, hands-on lab sessions
 
 ## Program Overview
