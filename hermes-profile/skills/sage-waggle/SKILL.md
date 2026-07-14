@@ -39,6 +39,8 @@ Auth tokens: get from `portal.sagecontinuum.org/account/access`. Format: `Author
 > **Camp default (Thor):** prefer `sudo pluginctl build .` → `sudo pluginctl run` for on-node development. Start with `references/pluginctl-camp-guide.md`. Use raw `podman build` only for ECR-bypass side-load workflows (see `references/pluginctl-sideload-and-node-build.md`).
 
 **Official docs (prefer these URLs when citing Sage):**
+- **Full docs catalog (summary + URL for every page):** `references/sage-docs-index.md` — pick a URL, then fetch the live page for full content
+- **Getting started:** <https://sagecontinuum.org/docs/getting-started>
 - **Edge apps tutorial:** <https://sagecontinuum.org/docs/category/edge-apps>
 - **pluginctl reference:** <https://sagecontinuum.org/docs/reference-guides/pluginctl> · tutorials: <https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/pluginctl>
 - **sesctl reference:** <https://sagecontinuum.org/docs/reference-guides/sesctl> · tutorials: <https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/sesctl>
@@ -652,6 +654,7 @@ Docker image naming: `registry.sagecontinuum.org/<user>/<plugin-name>:<version>`
 
 ## See Also
 
+- **`references/sage-docs-index.md`** — catalog of every page under [sagecontinuum.org/docs](https://sagecontinuum.org/docs/getting-started): title, summary, URL (fetch live for full content)
 - **Edge apps (tutorial series):** <https://sagecontinuum.org/docs/category/edge-apps>
 - **pluginctl:** <https://sagecontinuum.org/docs/reference-guides/pluginctl> · <https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/pluginctl>
 - **sesctl:** <https://sagecontinuum.org/docs/reference-guides/sesctl> · <https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/sesctl>
