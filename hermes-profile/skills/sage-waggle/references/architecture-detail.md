@@ -19,7 +19,7 @@
 ### Beekeeper (Management)
 - **Purpose**: Node identity, provisioning, registration, firmware updates
 - **Connectivity**: Reverse SSH tunnels from each node
-- **Manifests API**: `auth.sagecontinuum.org/manifests/` — node metadata, project assignment, GPS coordinates, deployed hardware
+- **Manifests API**: `auth.sagecontinuum.org/manifests/` (all) and `/manifests/<vsn>` (one) — rich hardware + sensor URIs + GPS. Flatter beta twin: `/api/v-beta/nodes/` and `/api/v-beta/nodes/<vsn>`. Details: `references/auth-api-manifests-and-nodes.md` (source app: [waggle-auth-app](https://github.com/waggle-sensor/waggle-auth-app)).
 
 ## Node Deployment Statistics (as of research session)
 - 287 total manifests, 184 deployed

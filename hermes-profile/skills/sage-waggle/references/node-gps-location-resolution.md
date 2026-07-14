@@ -177,11 +177,12 @@ fixed; mobile planned). WES then injects it (`WAGGLE_NODE_MOBILITY` env and/or t
 mounted manifest); pywaggle2 reports `"unknown"` when absent. Specify this NOW,
 before the CI team finalizes their runtime GPS/VSN API, so it rides along.
 
-Public endpoints used for the survey (no auth): the fleet list is
-`GET https://api.sagecontinuum.org/production` (flat per-node metadata: node_type,
-modem, focus, gps_lat/lon, address, …); a single node's full manifest is
-`GET https://auth.sagecontinuum.org/manifests/<VSN>/` (computes, sensors w/ camera
-URIs + hw_model, gps, project). Both are handy for fleet-wide reconnaissance
+Public endpoints used for the survey (no auth): a single node's **rich** manifest is
+`GET https://auth.sagecontinuum.org/manifests/<VSN>` (computes, sensors w/ camera
+URIs + hw_model, gps, project); the flatter beta twin is
+`GET https://auth.sagecontinuum.org/api/v-beta/nodes/<VSN>` (type, site, partner, focus, modem).
+Fleet lists: `/manifests/` and `/api/v-beta/nodes/` (~2MB for full manifests — prefer per-VSN).
+See `references/auth-api-manifests-and-nodes.md`. Both are handy for fleet-wide reconnaissance
 without touching a node.
 
 ## BirdNET geo-filter specifics

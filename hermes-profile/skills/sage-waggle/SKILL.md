@@ -26,11 +26,14 @@ globs: ["*sage*", "*waggle*", "*plugin*sage*", "*beehive*"]
 | API | Endpoint | Auth | Notes |
 |-----|----------|------|-------|
 | Data query | `POST https://data.sagecontinuum.org/api/v1/query` | None (public) | JSON body: `{"start":"-1h","tail":5}`, returns NDJSON |
-| Manifests | `GET https://auth.sagecontinuum.org/manifests/` | None | Trailing slash required. Returns all node metadata (2MB+) |
+| Manifests (rich) | `GET https://auth.sagecontinuum.org/manifests/` · `.../manifests/<vsn>` | None | Full node hardware + sensor **URI**s. Collection needs trailing `/`; single VSN slash optional. Prefer per-VSN (full list ≈2MB+). `?project=` |
+| Nodes (beta) | `GET https://auth.sagecontinuum.org/api/v-beta/nodes/` · `.../nodes/<vsn>` | None | Flatter node card (type, site, partner, focus, modem). Filters: `?phase=`, `?project__name=` (comma=OR) |
 | Edge Scheduler | `https://es.sagecontinuum.org` | Bearer token | Job submission/management |
 | MCP Server | `https://mcp.sagecontinuum.org/mcp` | None (read-only); Bearer token for job submission | 29 tools — see references/mcp-tools.md |
 | Portal | `https://portal.sagecontinuum.org` | Browser login | Node management, token generation |
 | ECR (Edge Code Repo) | `https://portal.sagecontinuum.org/apps` | Browser login | Plugin registry |
+
+Auth / manifest details + related routes (`/computes/`, `/sensors/`, …): **`references/auth-api-manifests-and-nodes.md`**. App source: [waggle-auth-app](https://github.com/waggle-sensor/waggle-auth-app).
 
 Auth tokens: get from `portal.sagecontinuum.org/account/access`. Format: `Authorization: Bearer {token}`.
 
@@ -517,7 +520,7 @@ After adding, start a new session. Tools appear as `mcp_sage_*` (e.g. `mcp_sage_
 - **Naming rules are strict**: repo names = lowercase alphanumeric + hyphens only (NO underscores); job names = lowercase letters, numbers, hyphens only (no underscores, uppercase, dots); plugin names in sage.yaml can use underscores
 - **Version immutability**: cannot resubmit same version to ECR — bump version every time
 - **Bulk version bumps in monorepos**: when bumping versions (e.g. `0.1.0` → `0.2.0`) across sage.yaml, job YAMLs, Dockerfiles, and docs, skip generic tutorial/example files that use the old version as a hypothetical placeholder (e.g. `docs/sage-runtime-packaging-tutorial.md` using `my-plugin:0.1.0` as a generic example). Use `replace_all=True` per-file rather than a blind global sed to avoid corrupting unrelated examples.
-- Manifests endpoint requires trailing slash (`/manifests/` not `/manifests`)
+- Manifests collection needs trailing slash (`/manifests/`); single node is `/manifests/<vsn>` (slash optional). Prefer per-VSN; also use `/api/v-beta/nodes/<vsn>` for flatter site/type metadata — see `references/auth-api-manifests-and-nodes.md`
 - Data API uses NDJSON (newline-delimited JSON), not standard JSON array
 - Portal can be slow/timeout — prefer API endpoints for programmatic access. Portal rebuilds DB on Sundays.
 - sage-data-client returns pandas DataFrames — ensure pandas is installed
@@ -655,6 +658,7 @@ Docker image naming: `registry.sagecontinuum.org/<user>/<plugin-name>:<version>`
 
 ## See Also
 
+- **`references/auth-api-manifests-and-nodes.md`** — `auth.sagecontinuum.org` manifests + `api/v-beta/nodes` (+ `/computes/`, `/sensors/`): URL, auth, field-level descriptions; source [waggle-auth-app](https://github.com/waggle-sensor/waggle-auth-app)
 - **`references/sage-docs-index.md`** — catalog of every page under [sagecontinuum.org/docs](https://sagecontinuum.org/docs/getting-started): title, summary, URL (fetch live for full content)
 - **`references/waggle-sensor-repos-index.md`** — catalog of **public** repos under [github.com/orgs/waggle-sensor](https://github.com/orgs/waggle-sensor/repositories): summary + URL (clone/browse for source; private repos omitted)
 - **Edge apps (tutorial series):** <https://sagecontinuum.org/docs/category/edge-apps>
