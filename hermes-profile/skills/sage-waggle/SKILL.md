@@ -25,7 +25,7 @@ globs: ["*sage*", "*waggle*", "*plugin*sage*", "*beehive*"]
 
 | API | Endpoint | Auth | Notes |
 |-----|----------|------|-------|
-| Data query | `POST https://data.sagecontinuum.org/api/v1/query` | None (public) | JSON body: `{"start":"-1h","tail":5}`, returns NDJSON |
+| Data query (timeseries) | `POST https://data.sagecontinuum.org/api/v1/query` | None (public) | Beehive timeseries from `plugin.publish()`. NDJSON. Filters: `plugin`, `name`, `vsn`, `sensor`. See `references/timeseries-data-query-api.md` |
 | Manifests (rich) | `GET https://auth.sagecontinuum.org/manifests/` · `.../manifests/<vsn>` | None | Full node hardware + sensor **URI**s. Collection needs trailing `/`; single VSN slash optional. Prefer per-VSN (full list ≈2MB+). `?project=` |
 | Nodes (beta) | `GET https://auth.sagecontinuum.org/api/v-beta/nodes/` · `.../nodes/<vsn>` | None | Flatter node card (type, site, partner, focus, modem). Filters: `?phase=`, `?project__name=` (comma=OR) |
 | Edge Scheduler | `https://es.sagecontinuum.org` | Bearer token | Job submission/management |
@@ -450,7 +450,33 @@ sesctl rm -j <job-id>          # remove by ID
 > **Reolink audio auth** (BirdNET etc.): FLV/BCS needs creds as query params
 cron-job liveness checks — see `references/job-scheduling-and-liveness.md`.**
 
-## Data Access (sage-data-client)
+## Data Access (timeseries)
+
+Scalar / event data from Sage plugins lands in Beehive and is queried at:
+
+**`POST https://data.sagecontinuum.org/api/v1/query`** (public, no auth) → **NDJSON**.
+
+Full patterns: **`references/timeseries-data-query-api.md`**. Tutorial: [Access and use data](https://sagecontinuum.org/docs/tutorials/accessing-data).
+
+### Example — recent samples from `plugin-iio`
+
+```bash
+curl https://data.sagecontinuum.org/api/v1/query \
+  -d '{"start":"-30m","filter":{"plugin":".*plugin-iio.*"}}'
+```
+
+```python
+import sage_data_client
+
+df = sage_data_client.query(
+    start="-30m",
+    filter={
+        "plugin": ".*plugin-iio.*",
+    },
+)
+```
+
+### By node / measurement
 
 ```python
 import sage_data_client
@@ -461,8 +487,6 @@ df = sage_data_client.query(
 )
 # Returns pandas DataFrame with: timestamp, name, value, meta (sensor, vsn, node, plugin)
 ```
-
-### curl (no Python needed)
 
 ```bash
 curl -s -X POST https://data.sagecontinuum.org/api/v1/query -d '
@@ -475,11 +499,9 @@ curl -s -X POST https://data.sagecontinuum.org/api/v1/query -d '
 }'
 ```
 
-Returns NDJSON (one JSON object per line). The data API is public — no auth needed.
+Filters: `name` (measurement), `sensor` (hardware), `vsn` (node ID), `plugin` (source plugin). Supports wildcards / regex (e.g. `".*plugin-iio.*"`).
 
-Filters: `name` (measurement), `sensor` (hardware), `vsn` (node ID), `plugin` (source plugin). Supports `*` wildcards.
-
-Large files (images, audio): stored on Open Storage Network (S3-compatible object store), not in time-series DB.
+Large files (images, audio): stored on Open Storage Network (S3-compatible object store), not in the timeseries DB.
 
 ## Triggers
 
@@ -659,6 +681,7 @@ Docker image naming: `registry.sagecontinuum.org/<user>/<plugin-name>:<version>`
 
 ## See Also
 
+- **`references/timeseries-data-query-api.md`** — `POST https://data.sagecontinuum.org/api/v1/query` for plugin/node timeseries (curl + `sage_data_client`; e.g. `plugin: ".*plugin-iio.*"`)
 - **`references/nvidia-jetson-thor-docs-index.md`** — catalog of [Jetson Thor](https://www.nvidia.com/en-us/autonomous-machines/embedded-systems/jetson-thor/), [JetPack](https://developer.nvidia.com/embedded/jetpack), and [Jetson Linux Developer Guide r39.2](https://docs.nvidia.com/jetson/archives/r39.2/DeveloperGuide/): title, summary, URL (fetch live for full content; Thor-focused quick list at top)
 - **`references/auth-api-manifests-and-nodes.md`** — `auth.sagecontinuum.org` manifests + `api/v-beta/nodes` (+ `/computes/`, `/sensors/`): URL, auth, field-level descriptions; source [waggle-auth-app](https://github.com/waggle-sensor/waggle-auth-app)
 - **`references/sage-docs-index.md`** — catalog of every page under [sagecontinuum.org/docs](https://sagecontinuum.org/docs/getting-started): title, summary, URL (fetch live for full content)

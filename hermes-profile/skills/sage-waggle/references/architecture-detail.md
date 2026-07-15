@@ -13,7 +13,7 @@
 - **Message bus**: RabbitMQ — all data flows through here
 - **Time-series DB**: Stores scalar measurements (temperature, humidity, counts)
 - **Object store**: Open Storage Network (S3-compatible) for large files (images, audio, video)
-- **Data API**: `data.sagecontinuum.org/api/v1/query` — public, no auth needed
+- **Data API**: `POST https://data.sagecontinuum.org/api/v1/query` — public timeseries (`plugin.publish()`). Filter by `plugin` / `vsn` / `name` / `sensor`. Details: `references/timeseries-data-query-api.md`
 - **Lambda Triggers**: Cloud functions triggered by incoming data patterns
 
 ### Beekeeper (Management)
