@@ -44,6 +44,7 @@ Auth tokens: get from `portal.sagecontinuum.org/account/access`. Format: `Author
 **Official docs (prefer these URLs when citing Sage):**
 - **Full docs catalog (summary + URL for every page):** `references/sage-docs-index.md` — pick a URL, then fetch the live page for full content
 - **Public code catalog (`waggle-sensor` org):** `references/waggle-sensor-repos-index.md` — summary + URL per public repo (private skipped)
+- **NVIDIA Jetson Thor / JetPack docs catalog:** `references/nvidia-jetson-thor-docs-index.md` — product + JetPack + Jetson Linux r39.2 Developer Guide (summary + URL; prefer Thor pages)
 - **Getting started:** <https://sagecontinuum.org/docs/getting-started>
 - **Edge apps tutorial:** <https://sagecontinuum.org/docs/category/edge-apps>
 - **pluginctl reference:** <https://sagecontinuum.org/docs/reference-guides/pluginctl> · tutorials: <https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/pluginctl>
@@ -658,6 +659,7 @@ Docker image naming: `registry.sagecontinuum.org/<user>/<plugin-name>:<version>`
 
 ## See Also
 
+- **`references/nvidia-jetson-thor-docs-index.md`** — catalog of [Jetson Thor](https://www.nvidia.com/en-us/autonomous-machines/embedded-systems/jetson-thor/), [JetPack](https://developer.nvidia.com/embedded/jetpack), and [Jetson Linux Developer Guide r39.2](https://docs.nvidia.com/jetson/archives/r39.2/DeveloperGuide/): title, summary, URL (fetch live for full content; Thor-focused quick list at top)
 - **`references/auth-api-manifests-and-nodes.md`** — `auth.sagecontinuum.org` manifests + `api/v-beta/nodes` (+ `/computes/`, `/sensors/`): URL, auth, field-level descriptions; source [waggle-auth-app](https://github.com/waggle-sensor/waggle-auth-app)
 - **`references/sage-docs-index.md`** — catalog of every page under [sagecontinuum.org/docs](https://sagecontinuum.org/docs/getting-started): title, summary, URL (fetch live for full content)
 - **`references/waggle-sensor-repos-index.md`** — catalog of **public** repos under [github.com/orgs/waggle-sensor](https://github.com/orgs/waggle-sensor/repositories): summary + URL (clone/browse for source; private repos omitted)
