@@ -11,7 +11,7 @@ hermes-profile/
 ├── distribution.yaml    # manifest (name: sage, version 1.0.2)
 ├── SOUL.md              # agent personality + platform domain facts
 ├── config.yaml          # Ollama default + NRP provider pre-wired (gpt-oss)
-├── mcp.json             # Sage MCP pre-wired; GitHub MCP endpoint listed (disabled until PAT)
+├── mcp.json             # Sage + Milvus SDK helper MCP enabled; GitHub MCP listed (disabled until PAT)
 ├── skills/sage-waggle/  # Sage/Waggle skill (~70 reference files)
 ├── docs/                # pywaggle2 design docs + project status
 └── README.md
@@ -66,8 +66,9 @@ The skill knows *how* Sage works, but you need your own access to touch nodes an
 3. **Node SSH access** — granted per-node by the instructor; ask for the exact `ssh` route and credentials.
 4. **Sage MCP** — pre-wired in `mcp.json`. Read-only tools need no token. For job-submission tools, set `SAGE_PORTAL_TOKEN` in your profile `.env` with Bearer header configured post-install.
 5. **GitHub MCP** (optional) — endpoint `https://api.githubcopilot.com/mcp/` ([registry](https://github.com/mcp/github/github-mcp-server)). In `mcp.json` as `github` with `enabled: false` until you add a PAT via `hermes mcp add` — details in `skills/sage-waggle/references/github-mcp-server.md`.
+6. **Milvus SDK Code Helper** — `https://sdk.milvus.io/mcp/` ([docs](https://milvus.io/docs/milvus-sdk-helper-mcp.md)), pre-enabled as `sdk-code-helper`. Camp default runtime: **[Milvus Lite](https://milvus.io/docs/milvus_lite.md)** (local `.db`), not a full Milvus server. See `skills/sage-waggle/references/milvus-sdk-helper-mcp.md`.
 
-See `skills/sage-waggle/references/mcp-tools.md` (Sage) and `skills/sage-waggle/references/github-mcp-server.md` (GitHub).
+See `skills/sage-waggle/references/mcp-tools.md` (Sage), `github-mcp-server.md` (GitHub), and `milvus-sdk-helper-mcp.md` (Milvus).
 
 ## Verify (smoke test)
 

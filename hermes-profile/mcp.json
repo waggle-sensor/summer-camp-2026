@@ -9,6 +9,14 @@
       "url": "https://api.githubcopilot.com/mcp/",
       "enabled": false,
       "timeout": 120
+    },
+    "sdk-code-helper": {
+      "url": "https://sdk.milvus.io/mcp/",
+      "headers": {
+        "Accept": "text/event-stream"
+      },
+      "enabled": true,
+      "timeout": 120
     }
   }
 }

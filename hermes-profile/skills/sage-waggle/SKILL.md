@@ -30,7 +30,8 @@ globs: ["*sage*", "*waggle*", "*plugin*sage*", "*beehive*"]
 | Nodes (beta) | `GET https://auth.sagecontinuum.org/api/v-beta/nodes/` · `.../nodes/<vsn>` | None | Flatter node card (type, site, partner, focus, modem). Filters: `?phase=`, `?project__name=` (comma=OR) |
 | Edge Scheduler | `https://es.sagecontinuum.org` | Bearer token | Job submission/management |
 | MCP Server (Sage) | `https://mcp.sagecontinuum.org/mcp` | None (read-only); Bearer for jobs | 29 Sage tools — `references/mcp-tools.md` |
-| MCP Server (GitHub) | `https://api.githubcopilot.com/mcp/` | Bearer GitHub PAT | Repos/issues/PRs/Actions — registry: [github-mcp-server](https://github.com/mcp/github/github-mcp-server) · `references/github-mcp-server.md` |
+| MCP Server (GitHub) | `https://api.githubcopilot.com/mcp/` | Bearer GitHub PAT | Repos/issues/PRs/Actions — [registry](https://github.com/mcp/github/github-mcp-server) · `references/github-mcp-server.md` |
+| MCP Server (Milvus SDK helper) | `https://sdk.milvus.io/mcp/` | None (`Accept: text/event-stream`) | Prefer **Milvus Lite** + `MilvusClient` — [MCP docs](https://milvus.io/docs/milvus-sdk-helper-mcp.md) · [Lite](https://milvus.io/docs/milvus_lite.md) · `references/milvus-sdk-helper-mcp.md` |
 | Portal | `https://portal.sagecontinuum.org` | Browser login | Node management, token generation |
 | ECR (Edge Code Repo) | Portal: `https://portal.sagecontinuum.org/apps` · API: `GET https://ecr.sagecontinuum.org/api/apps?public=true` | List public: none | Public plugins/apps available to schedule. Per-app: `/api/apps/<ns>/<name>` · `/api/apps/<ns>/<name>/<ver>`. See `references/ecr-public-apps-api.md` |
 
@@ -545,6 +546,17 @@ hermes mcp list
 
 Use for live GitHub repos/issues/PRs (e.g. `waggle-sensor/pywaggle`). Prefer `/mcp/readonly` or a read-only PAT when you only need browse access.
 
+### Milvus SDK Code Helper (pre-wired)
+
+Official helper: [milvus.io docs](https://milvus.io/docs/milvus-sdk-helper-mcp.md) · endpoint `https://sdk.milvus.io/mcp/` (header `Accept: text/event-stream`). Shipped **enabled** in `mcp.json` as `sdk-code-helper`. Setup notes: **`references/milvus-sdk-helper-mcp.md`**.
+
+```bash
+hermes mcp add sdk-code-helper --url "https://sdk.milvus.io/mcp/"
+hermes mcp list
+```
+
+Use when generating vector-search code: prefer **Milvus Lite** (`pip install -U "pymilvus[milvus-lite]"`, `MilvusClient("./demo.db")`) and current `MilvusClient` APIs — not full Milvus Standalone/Docker unless the user asks.
+
 ## Working with This Project
 
 - Project notes live at `~/AI-projects/Sage-agents/sage-agents.md` (15K+ bytes of detailed research)
@@ -698,6 +710,7 @@ Docker image naming: `registry.sagecontinuum.org/<user>/<plugin-name>:<version>`
 
 ## See Also
 
+- **`references/milvus-sdk-helper-mcp.md`** — Milvus SDK helper MCP; camp default **Milvus Lite** (`MilvusClient("./….db")`) not full Milvus — [MCP](https://milvus.io/docs/milvus-sdk-helper-mcp.md) · [Lite](https://milvus.io/docs/milvus_lite.md)
 - **`references/github-mcp-server.md`** — GitHub MCP remote endpoint `https://api.githubcopilot.com/mcp/` ([registry](https://github.com/mcp/github/github-mcp-server)); Hermes add + PAT auth
 - **`references/ecr-public-apps-api.md`** — `GET https://ecr.sagecontinuum.org/api/apps?public=true` to list scheduleable public ECR plugins (fields, related `/apps/<ns>/<name>` URLs)
 - **`references/timeseries-data-query-api.md`** — `POST https://data.sagecontinuum.org/api/v1/query` for plugin/node timeseries (curl + `sage_data_client`; e.g. `plugin: ".*plugin-iio.*"`)

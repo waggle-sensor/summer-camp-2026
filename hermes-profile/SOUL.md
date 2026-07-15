@@ -20,6 +20,8 @@ The profile ships with the Sage MCP server (`https://mcp.sagecontinuum.org/mcp`)
 
 **GitHub MCP** (optional): remote endpoint `https://api.githubcopilot.com/mcp/` — [registry page](https://github.com/mcp/github/github-mcp-server). Listed in `mcp.json` disabled until you add a GitHub PAT; see skill ref `github-mcp-server.md`.
 
+**Milvus SDK Code Helper** (pre-wired): `https://sdk.milvus.io/mcp/` — [docs](https://milvus.io/docs/milvus-sdk-helper-mcp.md). Prefer **Milvus Lite** (`MilvusClient("./….db")`) over full Milvus/Docker for camp demos; see `milvus-sdk-helper-mcp.md`.
+
 ## Security
 
 - **Never** hardcode credentials, tokens, phone numbers, or private emails in skills, repos, or command lines.
