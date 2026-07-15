@@ -75,6 +75,10 @@ Some clients also support `https://huggingface.co/mcp?login` for OAuth-style log
 
 ---
 
+## Related: Hugging Face skills
+
+This profile also vendors workflow skills from [huggingface/skills](https://github.com/huggingface/skills) (`hf-cli`, `huggingface-*`, …). Catalog: **`huggingface-skills-index.md`**. Use MCP for live Hub tool calls; use skills for CLI/training/Gradio procedures.
+
 ## Camp usage tips
 
 1. Prefer Hugging Face MCP for **models / datasets / Spaces / papers / HF docs / Jobs**. Sage MCP stays for nodes/data/jobs; GitHub MCP for source control; Milvus helper for vector-client code.

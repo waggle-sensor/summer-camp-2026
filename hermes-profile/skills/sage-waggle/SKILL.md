@@ -729,6 +729,7 @@ Docker image naming: `registry.sagecontinuum.org/<user>/<plugin-name>:<version>`
 - **`references/duckdb-docs-index.md`** — catalog of [DuckDB docs (current)](https://duckdb.org/docs/current/): title, summary, URL (fetch live for SQL/examples; high-signal Python/CLI/CSV/Parquet list at top)
 - **`references/milvus-sdk-helper-mcp.md`** — Milvus SDK helper MCP; camp default **Milvus Lite** (`MilvusClient("./….db")`) not full Milvus — [MCP](https://milvus.io/docs/milvus-sdk-helper-mcp.md) · [Lite](https://milvus.io/docs/milvus_lite.md)
 - **`references/huggingface-mcp-server.md`** — Hugging Face MCP remote endpoint `https://huggingface.co/mcp` ([docs](https://huggingface.co/docs/hub/en/agents-mcp)); Hermes add + HF token; tools at [settings/mcp](https://huggingface.co/settings/mcp)
+- **`references/huggingface-skills-index.md`** — vendored [huggingface/skills](https://github.com/huggingface/skills) catalog (`hf-cli`, Gradio, Spaces, training, …); pin in `skills/_vendor/`
 - **`references/github-mcp-server.md`** — GitHub MCP remote endpoint `https://api.githubcopilot.com/mcp/` ([registry](https://github.com/mcp/github/github-mcp-server)); Hermes add + PAT auth
 - **`references/ecr-public-apps-api.md`** — `GET https://ecr.sagecontinuum.org/api/apps?public=true` to list scheduleable public ECR plugins (fields, related `/apps/<ns>/<name>` URLs)
 - **`references/timeseries-data-query-api.md`** — `POST https://data.sagecontinuum.org/api/v1/query` for plugin/node timeseries (curl + `sage_data_client`; e.g. `plugin: ".*plugin-iio.*"`)

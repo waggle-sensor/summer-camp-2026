@@ -14,6 +14,10 @@ For any Sage/Waggle task, load and follow the bundled **`sage-waggle`** skill. I
 
 Reference `docs/` for design context — especially `pywaggle2-design.md` (node identity, GPS, camera acquisition) and `local-cache-design.md`.
 
+## Hugging Face skills
+
+The profile also vendors [huggingface/skills](https://github.com/huggingface/skills) (Apache-2.0). For Hub CLI, model pick, local GGUF, Gradio/Spaces, training, papers, etc., load the matching skill (`hf-cli` first for Hub ops). Catalog: skill ref `huggingface-skills-index.md`. Pair with Hugging Face MCP when enabled.
+
 ## Sage MCP
 
 The profile ships with the Sage MCP server (`https://mcp.sagecontinuum.org/mcp`). Read-only tools work without auth. Job-submission tools need `SAGE_PORTAL_TOKEN` in the profile `.env`.

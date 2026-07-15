@@ -8,11 +8,13 @@ Install on your Thor following [hermes-agent.md — Step 3A](../hermes-agent.md#
 
 ```text
 hermes-profile/
-├── distribution.yaml    # manifest (name: sage, version 1.0.3)
+├── distribution.yaml    # manifest (name: sage, version 1.0.4)
 ├── SOUL.md              # agent personality + platform domain facts
 ├── config.yaml          # Ollama default + NRP provider pre-wired (gpt-oss)
 ├── mcp.json             # Sage + Milvus SDK helper enabled; GitHub + Hugging Face MCP listed (disabled until tokens)
 ├── skills/sage-waggle/  # Sage/Waggle skill + doc indexes (Sage, Thor, DuckDB, …)
+├── skills/hf-*/         # Vendored Hugging Face skills (hf-cli, Gradio, Spaces, …)
+├── skills/huggingface-*/# More HF workflow skills + skills/_vendor (Apache-2.0 attribution)
 ├── docs/                # pywaggle2 design docs + project status
 └── README.md
 ```
@@ -68,14 +70,15 @@ The skill knows *how* Sage works, but you need your own access to touch nodes an
 4. **Sage MCP** — pre-wired in `mcp.json`. Read-only tools need no token. For job-submission tools, set `SAGE_PORTAL_TOKEN` in your profile `.env` with Bearer header configured post-install.
 5. **GitHub MCP** (optional) — endpoint `https://api.githubcopilot.com/mcp/` ([registry](https://github.com/mcp/github/github-mcp-server)). In `mcp.json` as `github` with `enabled: false` until you add a PAT via `hermes mcp add` — details in `skills/sage-waggle/references/github-mcp-server.md`.
 6. **Hugging Face MCP** (optional) — endpoint `https://huggingface.co/mcp` ([docs](https://huggingface.co/docs/hub/en/agents-mcp)). In `mcp.json` as `huggingface` with `enabled: false` until you add an HF token; configure tools at [settings/mcp](https://huggingface.co/settings/mcp) — details in `skills/sage-waggle/references/huggingface-mcp-server.md`.
-7. **Milvus SDK Code Helper** — `https://sdk.milvus.io/mcp/` ([docs](https://milvus.io/docs/milvus-sdk-helper-mcp.md)), pre-enabled as `sdk-code-helper`. Camp default runtime: **[Milvus Lite](https://milvus.io/docs/milvus_lite.md)** (local `.db`), not a full Milvus server. See `skills/sage-waggle/references/milvus-sdk-helper-mcp.md`.
+7. **Hugging Face skills** — vendored from [huggingface/skills](https://github.com/huggingface/skills) into `skills/` (`hf-cli`, `huggingface-*`, `trl-training`, …). Start with `/skill hf-cli`. Full list: `skills/sage-waggle/references/huggingface-skills-index.md`.
+8. **Milvus SDK Code Helper** — `https://sdk.milvus.io/mcp/` ([docs](https://milvus.io/docs/milvus-sdk-helper-mcp.md)), pre-enabled as `sdk-code-helper`. Camp default runtime: **[Milvus Lite](https://milvus.io/docs/milvus_lite.md)** (local `.db`), not a full Milvus server. See `skills/sage-waggle/references/milvus-sdk-helper-mcp.md`.
 
-See `skills/sage-waggle/references/mcp-tools.md` (Sage), `github-mcp-server.md` (GitHub), `huggingface-mcp-server.md` (Hugging Face), and `milvus-sdk-helper-mcp.md` (Milvus).
+See `skills/sage-waggle/references/mcp-tools.md` (Sage), `github-mcp-server.md` (GitHub), `huggingface-mcp-server.md` + `huggingface-skills-index.md` (Hugging Face), and `milvus-sdk-helper-mcp.md` (Milvus).
 
 ## Verify (smoke test)
 
 ```bash
-hermes skills list | grep sage-waggle
+hermes skills list | grep -E 'sage-waggle|hf-cli|huggingface-'
 hermes mcp list                              # 'sage' should show connected
 sage                                         # or: hermes -p sage
 ```
@@ -83,6 +86,8 @@ sage                                         # or: hermes -p sage
 Ask: **"Using the sage-waggle skill, why do Sage ECR builds currently fail, and what's the workaround?"**
 
 If the agent explains the `runc` / `/proc/acpi` build failure and the podman + `pluginctl` side-load workaround, the skill is loaded. If not, run `/reload-skills` or `/skill sage-waggle` and retry.
+
+For Hub work: **`/skill hf-cli`** then ask it to search or download a model.
 
 ## Your first task (guided walkthrough)
 
@@ -125,7 +130,7 @@ Replaces distribution-owned files (SOUL, skills, mcp.json, docs). **Preserves** 
 
 ## Author / versioning
 
-- Manifest: `distribution.yaml` (`name: sage`, `version: 1.0.3`)
+- Manifest: `distribution.yaml` (`name: sage`, `version: 1.0.4`)
 - Tag releases in git (`git tag v1.0.0`) for version tracking
 - See the [Profile Distributions author guide](https://hermes-agent.nousresearch.com/docs/user-guide/profile-distributions#for-authors-publishing-a-distribution)
 
