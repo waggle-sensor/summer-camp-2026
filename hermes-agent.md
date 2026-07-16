@@ -169,7 +169,7 @@ hermes profile info sage
 hermes doctor
 ```
 
-> **Graphify is required.** The profile ships many skills (Sage, Hugging Face, NVIDIA). Hermes must discover the right skill via `graphify-out/` (`AGENTS.md` + skill `graphify`). See [`hermes-profile/skills/sage-waggle/references/graphify-camp-guide.md`](hermes-profile/skills/sage-waggle/references/graphify-camp-guide.md). After `hermes profile update sage`, re-run `./scripts/setup-graphify.sh` (or `graphify update .` for a light refresh).
+> **Graphify is required.** The profile ships many skills (Sage, Hugging Face, NVIDIA). Hermes must discover the right skill via `graphify-out/` (`AGENTS.md` + skill `graphify`). See [`hermes-profile/skills/sage-waggle/references/graphify-guide.md`](hermes-profile/skills/sage-waggle/references/graphify-guide.md). Hermes CWD is often `$HOME` — use an absolute path to `scripts/setup-graphify.sh`, not a relative one. After `hermes profile update sage`, re-run setup (or `graphify update .` for a light refresh).
 
 Launch with `sage` or `hermes -p sage`.
 

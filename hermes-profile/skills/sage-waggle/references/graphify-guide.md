@@ -25,6 +25,20 @@ Complementary routers: `nvidia-skill-finder`, `huggingface-skills-index.md`, `nv
 
 After `hermes profile install ./hermes-profile --name sage --alias`:
 
+**Hermes CWD is usually `$HOME` (e.g. `/root`), not the profile.** Relative `bash scripts/setup-graphify.sh` → exit 127. Always use an absolute path (or `cd` into the profile first).
+
+```bash
+# Absolute path (what Hermes should run):
+SETUP="$HOME/.hermes/profiles/sage/scripts/setup-graphify.sh"
+# or: SETUP="$HOME/summer-camp-2026/hermes-profile/scripts/setup-graphify.sh"
+
+bash "$SETUP"           # BACKGROUND by default (returns immediately)
+bash "$SETUP" --status  # pid / log / ready?
+# tail -f "$(dirname "$SETUP")/../graphify-out/setup.log"
+```
+
+Manual from profile root:
+
 ```bash
 cd ~/.hermes/profiles/sage   # or the cloned hermes-profile/
 
