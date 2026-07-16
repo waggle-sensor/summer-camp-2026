@@ -59,10 +59,14 @@ The script:
 1. **Defaults to background** (`nohup`) — extract often takes 30+ minutes on Thor and will timeout agent tools if run in the foreground
 2. Creates `.venv-graphify` (avoids PEP 668 `externally-managed-environment`)
 3. `pip install 'graphifyy[ollama]'` into that venv
-4. Forces `OLLAMA_BASE_URL=…/v1` (OpenAI-compat — see troubleshooting)
-5. Probes `/api/tags` and `/v1/chat/completions` before a long extract
-6. Writes `graphify-out/setup.log` + `setup.pid`
-Manual equivalent:
+4. **Follows Hermes model selection** — reads `config.yaml` (`model.default` / `model.base_url` / `custom_providers`) and profile `.env` for keys
+5. Picks Graphify backend: Ollama URL (`:11434`) → `--backend ollama`; otherwise OpenAI-compat (NRP, NVIDIA Build, …) → `--backend openai`
+6. Probes `/v1/models` + `/v1/chat/completions` before a long extract
+7. Writes `graphify-out/setup.log` + `setup.pid`
+
+After `hermes model` (e.g. switch to NRP `gpt-oss`), re-run setup so Graphify uses the same endpoint/model. Overrides: `GRAPHIFY_BACKEND`, `OPENAI_*`, `OLLAMA_*`.
+
+Manual equivalent (Ollama):
 
 ```bash
 cd /path/to/hermes-profile
@@ -77,6 +81,16 @@ export OLLAMA_API_KEY=ollama            # any non-empty string; Ollama ignores a
 export GRAPHIFY_OLLAMA_KEEP_ALIVE=0
 # Leave GRAPHIFY_OLLAMA_NUM_CTX unset (auto). Do not force 8192 — truncates big chunks.
 graphify extract . --backend ollama --token-budget 25000 --max-concurrency 1 --api-timeout 1800
+```
+
+Manual equivalent (NRP / other OpenAI-compat — same keys as Hermes `.env`):
+
+```bash
+export OPENAI_BASE_URL=https://ellm.nrp-nautilus.io/v1
+export OPENAI_MODEL=gpt-oss
+export OPENAI_API_KEY="$NRP_LLM_API_KEY"
+graphify extract . --backend openai --model "$OPENAI_MODEL" \
+  --token-budget 25000 --max-concurrency 1 --api-timeout 1800
 ```
 
 ### `GRAPHIFY_OLLAMA_NUM_CTX` smaller than chunk (~57k) warning
