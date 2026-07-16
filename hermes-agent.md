@@ -158,10 +158,12 @@ hermes profile use sage
 cp ~/.hermes/profiles/sage/.env.EXAMPLE ~/.hermes/profiles/sage/.env
 # Edit .env if needed — add NVIDIA_API_KEY (nvapi-...) for Part 2; leave blank for Thor+Ollama
 
-# Required — Graphify knowledge graph over skills/ + docs/ (needs Ollama; can take a while)
+# Required — Graphify knowledge graph over skills/ + docs/
+# Default is BACKGROUND (long job on Thor). Check with --status.
 cd ~/.hermes/profiles/sage
 chmod +x scripts/setup-graphify.sh
 ./scripts/setup-graphify.sh
+./scripts/setup-graphify.sh --status
 
 hermes profile info sage
 hermes doctor

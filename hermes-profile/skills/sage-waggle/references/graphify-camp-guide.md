@@ -15,7 +15,7 @@
 ## Agent protocol (non-negotiable)
 
 1. If `graphify-out/graph.json` exists → `graphify query` / `path` / `explain` **before** mass-reading skills.
-2. If the graph is missing → run `scripts/setup-graphify.sh` (or `graphify extract . --backend ollama` with correct env) from the profile root, then query.
+2. If the graph is missing → run `scripts/setup-graphify.sh` (**background by default** — long Thor job; use `--status` / wait for `graphify-out/graph.json`). Do not block foreground tools on extract.
 3. Load the **specific** skill the graph points to (`sage-waggle`, `jetson-llm-serve`, `hf-cli`, …).
 4. Use Sage / HF MCP for live data; Graphify indexes **this profile’s** skills and docs only.
 
@@ -29,16 +29,25 @@ After `hermes profile install ./hermes-profile --name sage --alias`:
 cd ~/.hermes/profiles/sage   # or the cloned hermes-profile/
 
 chmod +x scripts/setup-graphify.sh
-./scripts/setup-graphify.sh
+./scripts/setup-graphify.sh          # BACKGROUND by default (returns immediately)
+./scripts/setup-graphify.sh --status # pid / log / ready?
+# tail -f graphify-out/setup.log
+```
+
+Foreground only if you intentionally want to watch the whole run:
+
+```bash
+./scripts/setup-graphify.sh --foreground
 ```
 
 The script:
 
-1. Creates `.venv-graphify` (avoids PEP 668 `externally-managed-environment`)
-2. `pip install 'graphifyy[ollama]'` into that venv
-3. Forces `OLLAMA_BASE_URL=…/v1` (OpenAI-compat — see troubleshooting)
-4. Probes `/api/tags` and `/v1/chat/completions` before a long extract
-
+1. **Defaults to background** (`nohup`) — extract often takes 30+ minutes on Thor and will timeout agent tools if run in the foreground
+2. Creates `.venv-graphify` (avoids PEP 668 `externally-managed-environment`)
+3. `pip install 'graphifyy[ollama]'` into that venv
+4. Forces `OLLAMA_BASE_URL=…/v1` (OpenAI-compat — see troubleshooting)
+5. Probes `/api/tags` and `/v1/chat/completions` before a long extract
+6. Writes `graphify-out/setup.log` + `setup.pid`
 Manual equivalent:
 
 ```bash
