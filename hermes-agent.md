@@ -538,6 +538,7 @@ Popular options:
 
 | Model ID |
 | -------- |
+| `z-ai/glm-5.2` |
 | `meta/llama-3.3-70b-instruct` |
 | `qwen/qwen3-235b-a22b` |
 | `deepseek-ai/deepseek-r1` |
