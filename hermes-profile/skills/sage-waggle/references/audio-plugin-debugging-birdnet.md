@@ -39,7 +39,7 @@ Mobotix-RTSP capture script (`tests/capture-audio.sh`, `rtsp://.../mobotix.sdp`)
 
 Credentials MUST be query params, NOT HTTP basic auth:
 ```
-http://CAMERA_IP:PORT/flv?port=1935&app=bcs&stream=channel0_sub.bcs&user=CAMERA_USER&password=CAMERA_PASSWORD
+http://CAMERA_IP:PORT/flv?port=1935&app=bcs&stream=channel0_sub.bcs&user=sage&password=CAMERA_PASSWORD
 ```
 `http://user:pass@ip/...` returns ffmpeg "End of file"/exit 187. The job
 uses the SUB-stream (16 kHz audio) → pair with `--bandpass-fmax 8000`.

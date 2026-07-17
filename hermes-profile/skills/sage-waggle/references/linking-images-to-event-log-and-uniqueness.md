@@ -1,7 +1,7 @@
 # Linking a downloaded object back to its event-log record + timestamp uniqueness
 
 Verified against the live Sage data API (2026-07-03, 24h fleet-wide `upload`
-records) and [pywaggle](https://github.com/waggle-sensor/pywaggle) `main` source. Use this when you need to (a) recover
+records) and pywaggle `main` source. Use this when you need to (a) recover
 provenance for a downloaded image/file, (b) reason about whether a timestamp is a
 safe join key, or (c) diagnose coarse/duplicated upload timestamps.
 

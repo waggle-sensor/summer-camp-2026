@@ -7,10 +7,18 @@ concrete WES facts that make cross-plugin file sharing on a node actually work.
 
 ## 1. Producer/consumer split — the fix for single-GPU contention
 
-Problem (see also `scheduling-continuous-vs-oneshot-and-gpu-contention.md`): on a
-single-GPU node you cannot run two always-on GPU model plugins. If each GPU plugin
-also does its own camera sampling continuously, it HOLDS the GPU 24/7 and blocks
-the others.
+Problem (see also `scheduling-continuous-vs-oneshot-and-gpu-contention.md` §3 for
+the precise mechanism breakdown): on a **memory-constrained** single-GPU node
+(NX/Xavier, ~8–16 GB VRAM) you cannot keep two heavy GPU models resident at once
+— the second OOMs. NOTE: this is a **VRAM** limit, not a compute one, and it is
+NODE-DEPENDENT — on Thor/H00F (unified ~122 GB) two resident models coexist fine,
+and a sleeping model blocks nothing. Also, when submitted as SES jobs the WES
+scheduler's `resource.gpu` selector may refuse to PLACE a second GPU plugin
+regardless of memory (a schedule policy, not hardware). So "you cannot run two
+always-on GPU plugins" is only strictly true on a small-VRAM node OR under the
+SES placement gate — not a universal law. The producer/consumer split is still
+the right architecture everywhere because it amortizes model load and decouples
+cadence; just don't cite "GPU can't be shared" as the reason on a big-memory node.
 
 Fix: DECOUPLE acquisition from inference.
 - PRODUCER: a cheap, CPU-only plugin (e.g. image-sampler2 `--continuous`) samples

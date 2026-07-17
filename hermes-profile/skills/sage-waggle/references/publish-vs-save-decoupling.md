@@ -126,6 +126,50 @@ is the YOLO-misses-while-BioCLIP-sees gap. To distinguish "quiet scene" from
 version ever detect person/bird?) rather than concluding the new build broke
 detection.
 
+## BirdNET labels are NOT birds-only → route topics by sound category (birdnet 0.3.0)
+
+BirdNET V2.4's label set (~6,522 classes) deliberately includes non-avian
+"distractor" classes so loud non-bird sounds get labeled instead of forced into
+a wrong bird. Confirmed in the acoustic-model labels
+(`~/.local/share/birdnet/acoustic-models/v2.4/tf/labels/*.txt`): alongside real
+taxa (birds, frogs, insects, a few mammals like `Canis latrans`/Coyote) sit
+human-made + abiotic classes — `Engine`, `Siren`, `Gun`, `Fireworks`,
+`Power tools`, `Dog`, `Human vocal/non-vocal/whistle`, `Noise`, `Environmental`.
+These are structurally distinguishable: for a distractor class, scientific ==
+common name (`Engine_Engine`), whereas a real taxon has a binomial ≠ common
+(`Haemorhous cassinii_Cassin's Finch`).
+
+Pete's fix (0.3.0): route each detection to a soundscape-ecology topic instead of
+one flat `env.detection.audio.*` namespace:
+- `env.detection.biophony.<scientific_name>` — living organisms (the science
+  signal). **DEFAULT bucket**: anything NOT in the explicit human-made/abiotic
+  sets is biophony, so future model species self-classify here automatically.
+- `env.detection.anthrophony.<name>` — human-made (engine, siren, gun, power
+  tools, fireworks, dog, human*).
+- `env.detection.geophony.<name>` — abiotic ambient (noise, environmental).
+
+Implementation shape (in `publish_detections`): a tiny `sound_category(sci)`
+lookup against two explicit sets (`ANTHROPHONY_CLASSES`, `GEOPHONY_CLASSES`),
+default `biophony`. Every record carries `meta.category`; the always-published
+summary heartbeat gains per-category counts (`biophony`/`anthrophony`/`geophony`)
++ a `category` field per species. Prefer an EXPLICIT named set over a
+`sci==common` heuristic — deterministic and auditable, and the distractor set is
+small (~11) and stable across BirdNET releases. `sage.yaml` ontology broadens to
+`env.detection.*` to cover all three families + summary. WHY it matters
+operationally: the eBird geo-filter restricts by range/season but does NOT filter
+the non-bird classes — so even a correctly geo-filtered node still emits Engine/
+Noise/etc., which is exactly why one shows up and looks "strange for birdnet."
+DEFERRED (birdnet FUTURE-ENHANCEMENTS.md): scope `--save-match` to biophony-only
+so passing cars/noise don't burn FLAC-clip storage.
+
+VERIFY the routing without the birdnet model (no TFLite load needed): import
+`app` in the repo `.venv` (system python often lacks numpy/tflite) and feed a
+mock `plugin` with `.publish(name,val,timestamp,meta)` capturing calls — assert a
+real taxon → `biophony`, `Engine` → `anthrophony`, `Noise` → `geophony`, and the
+summary's per-category counts. Unit-provable in isolation; `make test` (9/9
+classification cases in Docker) confirms the routing change didn't regress
+inference.
+
 ## Operational friction (recurring, expect these)
 
 - **Each `docker build` of a `registry.sagecontinuum.org/...` image triggers a

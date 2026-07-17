@@ -2,7 +2,7 @@
 
 How uploaded files are named, what metadata travels with them, how to link a
 downloaded file back to the event log, and the pitfalls. All verified against
-[pywaggle](https://github.com/waggle-sensor/pywaggle) `main` source + live Sage data API (2026-07).
+pywaggle `main` source + live Sage data API (2026-07).
 
 Source of truth in pywaggle:
 - `src/waggle/plugin/plugin.py` — `Plugin.upload_file`, `__publish`, `valid_meta`

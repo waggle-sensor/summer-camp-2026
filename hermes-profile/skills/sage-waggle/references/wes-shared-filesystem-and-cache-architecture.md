@@ -44,7 +44,7 @@ after 60 s (`ttlSecondsAfterFinished`). Jobs do not retry (`backOffLimit=0`).
 
 ### How to inspect on a node (read-only)
 ```bash
-ssh beckman@node-H00F.sage    # NOT bare H00F
+ssh USER@node-<VSN>.sage    # NOT bare H00F
 # list host shared area
 sudo ls -la /media/plugin-data/          # uploads/ docker_registry/ system-metrics/
 # how a pod mounts it (system pod always present):

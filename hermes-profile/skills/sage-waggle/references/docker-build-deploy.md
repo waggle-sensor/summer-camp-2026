@@ -150,15 +150,15 @@ build detached on Thor so it continues regardless of SSH state:
 
 ```bash
 # Start build in background on Thor (survives SSH disconnect)
-ssh beckman@node-H00F.sage "cd /tmp/sage-bioclip && \
+ssh USER@node-<VSN>.sage "cd /tmp/sage-bioclip && \
     nohup sudo docker build --no-cache -t bioclip-species:0.2.0 . \
     > /tmp/bioclip-build.log 2>&1 &"
 
 # Check progress from any new SSH session
-ssh beckman@node-H00F.sage "tail -5 /tmp/bioclip-build.log"
+ssh USER@node-<VSN>.sage "tail -5 /tmp/bioclip-build.log"
 
 # Same for k3s import (also slow — ~6 min for 22GB image)
-ssh beckman@node-H00F.sage "nohup bash -c \
+ssh USER@node-<VSN>.sage "nohup bash -c \
     'sudo docker save bioclip-species:0.2.0 | sudo k3s ctr images import - \
     > /tmp/bioclip-import.log 2>&1 && echo IMPORT_DONE >> /tmp/bioclip-import.log' &"
 ```

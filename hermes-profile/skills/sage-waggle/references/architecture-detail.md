@@ -13,13 +13,13 @@
 - **Message bus**: RabbitMQ — all data flows through here
 - **Time-series DB**: Stores scalar measurements (temperature, humidity, counts)
 - **Object store**: Open Storage Network (S3-compatible) for large files (images, audio, video)
-- **Data API**: `POST https://data.sagecontinuum.org/api/v1/query` — public timeseries (`plugin.publish()`). Filter by `plugin` / `vsn` / `name` / `sensor`. Details: `references/timeseries-data-query-api.md`
+- **Data API**: `data.sagecontinuum.org/api/v1/query` — public, no auth needed
 - **Lambda Triggers**: Cloud functions triggered by incoming data patterns
 
 ### Beekeeper (Management)
 - **Purpose**: Node identity, provisioning, registration, firmware updates
 - **Connectivity**: Reverse SSH tunnels from each node
-- **Manifests API**: `auth.sagecontinuum.org/manifests/` (all) and `/manifests/<vsn>` (one) — rich hardware + sensor URIs + GPS. Flatter beta twin: `/api/v-beta/nodes/` and `/api/v-beta/nodes/<vsn>`. Details: `references/auth-api-manifests-and-nodes.md` (source app: [waggle-auth-app](https://github.com/waggle-sensor/waggle-auth-app)).
+- **Manifests API**: `auth.sagecontinuum.org/manifests/` — node metadata, project assignment, GPS coordinates, deployed hardware
 
 ## Node Deployment Statistics (as of research session)
 - 287 total manifests, 184 deployed

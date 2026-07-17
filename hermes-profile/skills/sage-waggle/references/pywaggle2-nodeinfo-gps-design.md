@@ -15,8 +15,9 @@ how the API should WRAP it).
   currently DEAD CODE in 0.56 — module absent).
 - NEW METHODS on `class Plugin` (`waggle/plugin/plugin.py`, beside upload_file/
   timeit): `get_node_info(max_age=None) -> NodeInfo`, plus shims `get_vsn()`,
-  `get_location()`. `NodeInfo` = NamedTuple(vsn, node_id, lat, lon, alt, fix_time,
-  location_source, mobility[, vsn_is_placeholder]).
+  get_location()`. `NodeInfo` = NamedTuple(vsn, node_id, lat, lon, alt, fix_time,
+  location_source, mobility). NOTE: `vsn_is_placeholder` was DROPPED (see resolved
+  decisions below) — `vsn is None` already signals unresolved.
 - The resolver logic ALREADY EXISTS + is tested: image-sampler2
   `nodemeta.py::resolve_identity()` (+ `tests/test_nodemeta_stage3.py`, 13 pure
   tests). Hoist it; it does per-field precedence and never fabricates coords.
@@ -60,7 +61,8 @@ never crash, never fake — resolve to None (mobility -> "unknown").
 - **Wire sentinels** (for channels with no null, e.g. bare env vars):
   - VSN missing -> `0` (never a real VSN; real look like W09E/H00F)
   - lat/lon missing -> `999` (0 is a VALID coord = Null Island, so CANNOT be the
-    sentinel; 999 is off-globe + greppable). Detect by RANGE: |lat|>90 or |lon|>180.
+    sentinel; 999 is off-globe + greppable). 999 is the canonical literal; the
+    normalizer also defensively rejects anything outside lat[-90,90]/lon[-180,180].
   - MOBILITY missing -> unset -> "unknown".
 - **Normalize at the API boundary.** A field can arrive missing 3 ways: wire
   sentinel, genuinely absent, or a proper None (a newer correct WES). pywaggle2
@@ -94,10 +96,22 @@ WES injects per-pod env (and/or mounts node-manifest-v2.json):
 - gpsd host/port discovery: read `WAGGLE_GPS_SERVER` env (host:port) if set, else
   default to `wes-gps-server.default.svc.cluster.local:2947`.
 
-## Open points still to confirm (as of 2026-07-08, see design §2.2.4)
-1. lat/lon sentinel by RANGE (|lat|>90/|lon|>180) vs literal 999 — lean: range.
-2. VSN missing set = {0, "0", ""} all -> None — lean: yes broaden.
-3. Expose vsn_is_placeholder + location_source in NodeInfo — lean: yes.
-4. get_vsn() when missing returns None — lean: yes.
-5. env vars vs mounted manifest primary — lean: env first, manifest fallback.
-6. WAGGLE_GPS_SERVER env name/default — lean: as above.
+## RESOLVED design decisions (DECIDED 2026-07-08, design §2.2.4)
+All six earlier open points are now decided (Pete approved). Two changed from the
+earlier leans — note them:
+1. **lat/lon sentinel is the LITERAL `999`** (canonical value producers emit).
+   Valid ranges are lat `[-90, 90]`, lon `[-180, 180]` (NOT `abs>90`/`abs>180` —
+   that earlier phrasing was sloppy math; ±90/±180 are VALID). The normalizer
+   treats `999`/`"999"`/`"999.0"` as missing -> None, AND defensively rejects any
+   value parsing out of the valid range. But 999 is the documented sentinel.
+2. VSN missing set = {`0`, `"0"`, `""`} all -> `vsn=None`. (accepted)
+3. **`vsn_is_placeholder` is DROPPED.** NodeInfo exposes `location_source`
+   (gps-live|manifest|unavailable) but NOT a placeholder flag: with vsn normalized
+   to None when unresolved, `vsn is None` already means "unresolved" — a separate
+   flag is redundant and invites drift. (image-sampler2's nodemeta.py still carries
+   it only because it substitutes a visible "NODE" string; that behavior changes to
+   None-when-missing on hoist.)
+4. `get_vsn()` returns None when missing. (accepted)
+5. Env vars are PRIMARY; mounted manifest is the fallback. (accepted)
+6. gpsd via `WAGGLE_GPS_SERVER` env, default to the DNS name. (accepted)
+The identity/GPS API shape is now LOCKED.

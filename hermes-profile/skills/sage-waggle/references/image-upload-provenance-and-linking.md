@@ -2,7 +2,7 @@
 
 How Sage/pywaggle names uploaded files, what metadata travels with them, how to
 link a downloaded file back to its event-log record, and the uniqueness pitfalls.
-All verified against [pywaggle](https://github.com/waggle-sensor/pywaggle) `main` source + live `data.sagecontinuum.org` in
+All verified against pywaggle `main` source + live `data.sagecontinuum.org` in
 2026-07.
 
 ## Object-store name = `{timestamp}-{filename}` (pywaggle builds it)

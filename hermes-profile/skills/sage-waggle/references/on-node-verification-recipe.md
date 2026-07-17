@@ -5,7 +5,7 @@ This is the "prove it in the data plane, not just Running" workflow the user
 insists on (Running ≠ working; crash-loops show Running).
 
 ## 0. Preconditions / invocation facts (see also pluginctl-sideload-and-node-build.md)
-- `ssh beckman@node-H00F.sage` then `export XDG_RUNTIME_DIR=/run/user/$(id -u)`.
+- `ssh USER@node-<VSN>.sage` then `export XDG_RUNTIME_DIR=/run/user/$(id -u)`.
 - Use `sudo pluginctl` (root k3s cluster-admin config). Unprivileged pluginctl
   hardcodes the `default` namespace where beckman lacks pod-create RBAC.
 - Volume-mounted pods MUST target a node: use `--selector zone=core` (the node
@@ -63,6 +63,54 @@ curl -s -m 30 -X POST https://data.sagecontinuum.org/api/v1/query \
   (from the cached filename), NOT the send time; `meta.upload_timestamp` carries
   the real send time. Verified live: record ts = capture ts, upload_timestamp
   later, `meta.source=from-cache`.
+
+## 3b. Consumer-side e2e: producer → shared cache → CONSUMER (VERIFIED sage-yolo2 2.0.0, H00F 2026-07-14)
+The above proves a PRODUCER/uploader. For a pywaggle2 CACHE CONSUMER (a plugin that
+reads frames another plugin wrote and publishes derived measurements — e.g. YOLO
+counts), run the pair back-to-back against the REAL shared cache mount:
+```
+# PRODUCER: image-sampler2 --continuous fills the shared WES cache with real frames
+sudo pluginctl run --name prod --selector zone=core --env-from /root/cam.env \
+  -v /media/plugin-data/local-cache:/local-cache \
+  localhost/image-sampler2:<ver> -- \
+  --continuous 10 --stream top_camera --name top \
+  --cache-root /local-cache --cache-name hummingcam --cache-max-count 20 --vsn H00F
+# CONSUMER: the GPU plugin reads those frames (NOTE the mandatory mem limit)
+sudo pluginctl run --name cons --selector zone=core \
+  --resource limit.memory=16Gi,request.memory=4Gi \
+  -v /media/plugin-data/local-cache:/local-cache \
+  -e WAGGLE_JOB_NAME=stage7 -e WAGGLE_TASK_NAME=sage-yolo2 \
+  registry.sagecontinuum.org/<ns>/<consumer>:<ver> -- \
+  --source cache --input /local-cache/hummingcam/top --every 0 --all-unseen --max-frames 5 ...
+```
+Key differences vs the producer recipe:
+- **GPU consumers MUST set `--resource limit.memory=16Gi,request.memory=4Gi`** or
+  the pod is OOMKilled (exit 137) at first inference — see the "GPU consumer
+  OOMKilled" section in `pluginctl-sideload-and-node-build.md` for the full
+  diagnosis. (`--resource resource.gpu=true` is INVALID; GPU is auto on Thor.)
+- The shared cache is the REAL WES mount `/media/plugin-data/local-cache` (from
+  `wes-local-cache-manager`), not a scratch dir — both pods mount it to `/local-cache`.
+- Capturing the consumer's per-frame output before GC: pluginctl detaches its log
+  stream early, so poll `sudo kubectl logs <n> -n default -c <n>` into a file until
+  a marker appears (see the "CAPTURING a one-shot pod's FULL logs" section in
+  pluginctl-sideload-and-node-build.md).
+
+### Frame-anchored COUNTS confirmation (observation_ts = capture_ts) — the decisive check
+A counting consumer publishes `env.count.total` (+ `env.count.<class>`) EVERY cycle
+(even 0 = heartbeat), not `upload`. Confirm frame-anchoring in the data plane:
+```
+curl -s -X POST https://data.sagecontinuum.org/api/v1/query -H 'Content-Type: application/json' \
+  -d '{"start":"-15m","filter":{"vsn":"H00F","name":"env.count.total"}}'
+```
+The record `timestamp` MUST equal the frame's CAPTURE time (matches the producer's
+`<ns>-v2-<vsn>-<cam>.jpg` filename ns), NOT the inference time — proving the
+consumer stamps observation time from the frame, so a backlog processed minutes
+late still lands on the science timeline correctly. `meta` carries vsn/node
+(downstream-attached), `plugin` (image ref), `task` (the `-n` name). SEEN-STORE
+dedup proof: the consumer writes SHA256 `unique_id`s under the cache's reserved
+`.state/` area; a SECOND run loads them ("N known"), skips those frames, and
+processes only new ones — persists across pod restarts. Inspect on the host:
+`sudo find /media/plugin-data/local-cache/.state -name seen -exec wc -l {} +`.
 
 ## 4. Liveness / dead-camera test (heartbeat plugins)
 To prove a periodic liveness signal fires when the sensor is dead: relaunch

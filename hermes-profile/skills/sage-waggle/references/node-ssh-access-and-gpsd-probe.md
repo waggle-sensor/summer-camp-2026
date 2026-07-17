@@ -5,10 +5,21 @@ Learned probing W09E/W08B/W06C/W0A4 for a live gpsd fix (2026-07-08).
 
 ## Two DIFFERENT SSH routes — pick the right one per node
 
-1. **H00F (and any node with a personal account):**
-   `ssh beckman@node-H00F.sage`
+1. **Thor nodes (any VSN starting with `H`) — the SIMPLE route:**
+   `ssh USER@node-<VSN>.sage`   (substitute the VSN, keep the `H` prefix)
+   - This is the general pattern for the **new "Thor" ARM64 nodes** (H-prefix VSNs),
+     NOT a per-node special case. If the VSN begins with `H`, use this route.
    - Uses `~/.ssh/config` `Host *.sage` -> `ProxyJump sage-vpn` (vpn.sagecontinuum.org).
-   - User `beckman` here has **passwordless sudo** -> full k3s/kubectl/docker.
+     No beekeeper gateway, no lowercase-vsn dance — just the direct `.sage` name.
+   - User `beckman` has **passwordless sudo** -> full k3s/kubectl/docker.
+     (`sudo -n true` succeeds; `sudo kubectl ...` works directly.)
+   - Verified live on H00F 2026-07-12: `ssh USER@node-<VSN>.sage` lands as user
+     `beckman` on host `sgt-thor-<serial>-H00F`; `/etc/waggle/vsn`=H00F,
+     `/etc/waggle/node-id`=00004CBB4701D16C; k3s **v1.34.2+k3s1** (client+server),
+     `sudo kubectl` returns cluster version with no password prompt.
+   - Contrast with route 2: Thor H-nodes do NOT go through `waggle-dev-sshd`; the
+     old NX/WSN nodes (W-prefix) DO. Prefix tells you the route: `H*` = route 1,
+     `W*`/`V*` = route 2.
 
 2. **General fleet nodes (WSNs), via the beekeeper gateway:**
    `ssh waggle-dev-node-<LOWERCASE-vsn>`   e.g. `ssh waggle-dev-node-w08b`
@@ -28,7 +39,7 @@ Learned probing W09E/W08B/W06C/W0A4 for a live gpsd fix (2026-07-08).
 - `Stdio forwarding request failed: Session open refused by peer` on `<node>.sage`
   = that node's VPN/beehive reverse tunnel isn't up right now (node offline / not
   phoning home) OR you used the wrong route. Test the jump host alone:
-  `ssh sage-vpn 'hostname'` and a known-good node (`ssh beckman@node-H00F.sage echo ok`).
+  `ssh sage-vpn 'hostname'` and a known-good node (`ssh USER@node-<VSN>.sage echo ok`).
 - Gateway greets you ("Welcome to our node SSH gateway") but your command produces
   no output = the `connect-to-node` arg didn't resolve. Verify with:
   `ssh waggle-dev-sshd connect-to-node <lowercase-vsn>` — it prints
@@ -108,3 +119,10 @@ below). Don't conclude "gpsd is unreachable without root."
 - Surveyed coords: W08B 41.822952,-87.609693 · W06C 43.940154,-110.644137 ·
   W0A4 41.701598,-87.995233 · **W09E null (unsurveyed)** — good edge case for the
   "location unknown -> return None, omit EXIF GPS, never fabricate" rule.
+
+## Fleet facts confirmed 2026-07-09
+- **W096** = old-style login node, reached cleanly via `ssh waggle@waggle-dev-node-w096`
+  (lowercase vsn, as always). Manifest world-readable at 0644 — no sudo needed to
+  read it. W096 is a **LoRaWAN node** (9 `lorawanconnections` — sap-flow meters +
+  S-node) — the reference node for manifest-sensitivity work (see
+  `wes-pod-config-and-manifest-exposure.md`). Chicago (1020 S Union Ave).

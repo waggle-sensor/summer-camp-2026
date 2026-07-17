@@ -17,7 +17,7 @@ globs: ["*sage*", "*waggle*", "*plugin*sage*", "*beehive*"]
 
 ## Architecture Overview
 
-1. **Edge Nodes** — ARM64/x86; WES/k3s. Refs:`node-ssh-access-and-gpsd-probe`,`node-identity-and-upload-contract`,`pywaggle2-nodeinfo-gps-design`,`pluginctl-sideload-and-node-build`,`image-metadata-naming-and-eventlog-linking`,`storage-upload-health-verification`,`thor-arm64-deploy-pipeline`,`cloud-trigger-watchers`,`scheduling-continuous-vs-oneshot-and-gpu-contention`,`local-cache-ring-buffer`,`wes-node-service-daemonset-sideload`,`continuous-producer-patterns`,`plugin-design-doc-workflow`,`n
+1. **Edge Nodes** — ARM64/x86; WES/k3s. Prefer honesty: real VSNs/names only (`references/data-query-first-report-and-history.md`, `references/data-viz-and-honesty.md`). Key refs: `references/stack-architecture-map.md`, `references/pywaggle2-producer-consumer-architecture.md`, `references/frame-anchored-batch-consumers-and-watchers.md`, `references/frame-anchored-vs-window-pollers.md`, `references/node-ssh-access-and-gpsd-probe.md`, `references/node-identity-and-upload-contract.md`, `references/pywaggle2-nodeinfo-gps-design.md`, `references/wes-pod-config-and-manifest-exposure.md`, `references/pluginctl-sideload-and-node-build.md`, `references/node-sideload-test-and-restore.md`, `references/audio-plugin-multinode-testing.md`, `references/storage-upload-health-verification.md`, `references/ci-handoff-doc-discipline.md`, `references/thor-arm64-deploy-pipeline.md`, `references/scheduling-continuous-vs-oneshot-and-gpu-contention.md`, `references/producer-consumer-gpu-and-shared-mounts.md`.
 2. **Beehive (Cloud)** — Receives data uploads, stores in time-series DB + object store. Runs RabbitMQ message bus.
 3. **Beekeeper** — Node identity, registration, provisioning, reverse SSH tunnels for management.
 
@@ -514,6 +514,8 @@ Large files (images, audio): stored on Open Storage Network (S3-compatible objec
 - **Cloud-to-edge**: data arrival in Beehive triggers edge job (Lambda Triggers)
 - **Edge-to-cloud**: edge data triggers HPC/cloud compute via sage-data-client polling
 - **External notifications (Slack, email, etc.)**: run a watcher script externally that polls the data API and reacts. Containers on Sage nodes are network-restricted and cannot reach external services. Host processes on some nodes (e.g. Thor via SSH) CAN reach external URLs — but the recommended pattern is a cloud-side watcher, not a host-side process. See `references/cloud-trigger-notifications.md` for the full pattern, Slack webhook + image upload examples, secret management, and reference implementations (hummingbird-watcher, wildfire-trigger, severe-weather-trigger).
+- **Shareable web viz of fleet data** (public API + CORS proxy, themes, WebGL fallback): `references/sage-data-web-viz.md` · 3D globe: `references/sage-data-3d-globe-viz.md` · template: `templates/sage-cors-proxy-server.py`
+- **Share a Sage knowledge bundle** (skills tap, secret scrubbing, starter README): `references/sharing-a-sage-knowledge-bundle.md`
 
 ## GitHub Organizations
 
@@ -742,6 +744,23 @@ Docker image naming: `registry.sagecontinuum.org/<user>/<plugin-name>:<version>`
 - **`references/sage-docs-index.md`** — catalog of every page under [sagecontinuum.org/docs](https://sagecontinuum.org/docs/getting-started): title, summary, URL (fetch live for full content)
 - **`references/waggle-sensor-repos-index.md`** — catalog of **public** repos under [github.com/orgs/waggle-sensor](https://github.com/orgs/waggle-sensor/repositories): summary + URL (clone/browse for source; private repos omitted)
 - **`references/sagecontinuum-repos-index.md`** — catalog of **public** repos under [github.com/orgs/sagecontinuum](https://github.com/orgs/sagecontinuum/repositories): summary + URL (private repos omitted; many edge-stack tools live under `waggle-sensor` instead)
+- **`references/stack-architecture-map.md`** — end-to-end Sage/Waggle stack map (edge ↔ Beehive ↔ portal)
+- **`references/pywaggle2-producer-consumer-architecture.md`** — producer/consumer plugin architecture (pywaggle2)
+- **`references/frame-anchored-batch-consumers-and-watchers.md`** / **`references/frame-anchored-vs-window-pollers.md`** — frame-anchored batch consumers vs window pollers
+- **`references/crop-producer-detect-classify-cascade.md`** / **`references/detect-then-crop-then-classify-cascade.md`** — detect → crop → classify cascades
+- **`references/node-sideload-test-and-restore.md`** — on-node sideload test + restore workflow
+- **`references/audio-plugin-multinode-testing.md`** — multi-node audio plugin testing
+- **`references/wes-pod-config-and-manifest-exposure.md`** — WES pod config + manifest exposure
+- **`references/git-bundle-transfer-to-node.md`** — git bundle transfer onto a node
+- **`references/ecr-build-to-ses-cutover.md`** — ECR build → SES cutover
+- **`references/jobspec-verification-discipline.md`** / **`references/node-access-and-job-ownership.md`** — jobspec verification + node access/ownership
+- **`references/ci-handoff-doc-discipline.md`** — CI handoff / doc discipline
+- **`references/external-project-edge-porting-review.md`** — reviewing external projects for edge porting
+- **`references/data-query-first-report-and-history.md`** / **`references/data-viz-and-honesty.md`** — query-first reporting + viz honesty (no fabricated VSNs/data)
+- **`references/sage-data-web-viz.md`** / **`references/sage-data-3d-globe-viz.md`** — shareable Sage data web / 3D globe viz
+- **`references/sharing-a-sage-knowledge-bundle.md`** — packaging/sharing a Sage Hermes knowledge bundle
+- **`scripts/sample_wind_history.py`** / **`scripts/sigpipe-pipefail-regression.sh`** — sample wind history helper + SIGPIPE/`pipefail` regression check
+- **`templates/sage-cors-proxy-server.py`** — CORS proxy template for browser viz against the public data API
 - **Edge apps (tutorial series):** <https://sagecontinuum.org/docs/category/edge-apps>
 - **pluginctl:** <https://sagecontinuum.org/docs/reference-guides/pluginctl> · <https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/pluginctl>
 - **sesctl:** <https://sagecontinuum.org/docs/reference-guides/sesctl> · <https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/sesctl>

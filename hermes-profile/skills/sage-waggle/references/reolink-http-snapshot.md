@@ -36,7 +36,7 @@ with zero accuracy benefit.
 
 ```bash
 # One-shot test (--continuous N)
-python3 app.py --snapshot-url "http://IP:PORT/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=snap&user=USER&password=PASS&width=640&height=360" --continuous N
+python3 app.py --snapshot-url "http://IP:PORT/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=snap&user=USER&password=CAMERA_PASSWORD=640&height=360" --continuous N
 
 # Continuous via pluginctl (every 60 seconds)
 sudo pluginctl deploy -n yolo-hummingcam \
@@ -71,7 +71,7 @@ Basic auth returns ffmpeg `Error opening input: End of file` / **exit 187**.
 Credentials MUST be passed as **query parameters**:
 
 ```
-http://IP:PORT/flv?port=1935&app=bcs&stream=channel0_sub.bcs&user=USER&password=PASS
+http://IP:PORT/flv?port=1935&app=bcs&stream=channel0_sub.bcs&user=USER&password=CAMERA_PASSWORD
 ```
 
 Confirmed working on H00F hummingcam (RLC-811A, sub-stream carries 16 kHz audio,

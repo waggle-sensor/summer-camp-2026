@@ -58,7 +58,7 @@ ffmpeg input URL auth differs by camera and is a frequent silent failure:
   auth. Basic auth (`http://user:pass@ip/...`) returns ffmpeg `Error opening input: End of
   file` / **exit 187**. Working form (single-quote it in shells — `!` triggers history
   expansion, and `&`/`?` need quoting):
-  `'http://IP:PORT/flv?port=1935&app=bcs&stream=channel0_sub.bcs&user=USER&password=PASS'`
+  `'http://IP:PORT/flv?port=1935&app=bcs&stream=channel0_sub.bcs&user=USER&password=CAMERA_PASSWORD'`
   The sub-stream carries ~16 kHz audio → use `--bandpass-fmax 8000`.
 - **Mobotix (M16) MxPEG**: uses HTTP **basic auth** (`http://user:pass@ip/control/faststream.jpg?stream=MxPEG&needlength`).
   Native audio is pcm_alaw 8 kHz (4 kHz Nyquist) → `--bandpass-fmax 4000`, marginal for birdsong.

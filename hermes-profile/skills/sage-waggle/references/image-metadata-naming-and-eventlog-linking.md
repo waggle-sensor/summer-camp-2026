@@ -3,7 +3,7 @@
 Durable techniques for working with camera images uploaded by Sage plugins:
 how they're named, what metadata survives, how to link a downloaded file back
 to its event-log record, and the uniqueness pitfalls. Verified against live
-data.sagecontinuum.org and [pywaggle](https://github.com/waggle-sensor/pywaggle) `main` source, 2026-07.
+data.sagecontinuum.org and pywaggle `main` source, 2026-07.
 
 ## 1. pywaggle object naming (who names what)
 
@@ -108,7 +108,7 @@ than any hand-typed lat/lon — prefer it. Reference implementation: image-sampl
 Two patterns exist in the beckman plugins; know the difference and prefer the safe
 one. LEGACY (yolo-object-counter, sage-bioclip jobs): camera creds passed as a
 PLAINTEXT query-param snapshot URL in the job-spec `args`, e.g.
-`--snapshot-url "http://IP:PORT/cgi-bin/api.cgi?cmd=Snap&...&user=USER&password=PASS"`.
+`--snapshot-url "http://IP:PORT/cgi-bin/api.cgi?cmd=Snap&...&user=USER&password=CAMERA_PASSWORD"`.
 This LEAKS the password into: pod argv (`kubectl describe pod`), the process list,
 scheduler/pod logs, the ECR/SES job record, AND the git-committed job YAML. It
 works, but it is a standing secret-exposure.

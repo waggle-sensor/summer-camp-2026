@@ -74,7 +74,7 @@ def fetch_snapshot(url: str) -> np.ndarray:
     Fetch a JPEG snapshot from an HTTP URL and return as a BGR numpy array.
 
     Works with Reolink's HTTP API:
-      http://IP:PORT/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=abc&user=USER&password=PASS
+      http://IP:PORT/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=abc&user=USER&password=CAMERA_PASSWORD
 
     Also works with any URL that returns a JPEG image.
     """
@@ -110,7 +110,7 @@ Examples:
   python app.py --stream bottom_camera --continuous Y
 
   # HTTP snapshot camera (one-shot test):
-  python app.py --snapshot-url "http://IP:PORT/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=snap&user=USER&password=PASS&width=640&height=360" --continuous N
+  python app.py --snapshot-url "http://IP:PORT/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=snap&user=USER&password=CAMERA_PASSWORD=640&height=360" --continuous N
 
   # Directory of images (batch):
   python app.py --image-dir ./test-images/ --continuous N

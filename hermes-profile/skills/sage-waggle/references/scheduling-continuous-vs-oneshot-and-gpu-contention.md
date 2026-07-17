@@ -4,6 +4,13 @@ Hard-won lessons from operating yolo + bioclip + birdnet on Thor node H00F
 (single GPU, hummingbird cam). These govern HOW to schedule camera/audio
 plugins, not just how to deploy them.
 
+> RELATED TRAP: a BATCH consumer (`--every 10m`) publishes FRAME-ANCHORED
+> records (timestamp = CAPTURE time, not publish time), which silently breaks any
+> downstream watcher/alerter polling with a short lookback window — a confirmed
+> detection is published but never falls inside the poller's window. Diagnosis +
+> fix (wide lookback + per-record seen-ID dedup, NOT a time high-water mark):
+> see `references/frame-anchored-vs-window-pollers.md`.
+
 ## 1. Sampling rate is a first-class design decision — it broke detection once
 
 Moving the YOLO hummingbird-cam plugin from a **continuous pod**
@@ -20,6 +27,26 @@ almost never coincides with a visit.
   `--continuous Y --interval 60` (or tighter). Pod stays running; model stays warm.
 - Slow-changing scenes (clouds, snow depth, parking occupancy) → **one-shot**
   cron is cheaper and fine.
+
+**Self-sleep (continuous pod) vs SES one-shot cron — how to actually decide.**
+First rule out GPU contention as a factor (it usually isn't — see §3): on a
+big-unified-memory node like Thor a sleeping continuous consumer costs ~zero
+compute and negligible memory, so it does NOT block co-tenants and "needs a
+dedicated GPU" is FALSE there. Once contention is off the table the choice is
+about RELIABILITY, and cron usually wins:
+- Cold-start cost: self-sleep loads the model ONCE (warm); cron reloads every
+  tick (~2–5 s YOLO, ~1 min BioCLIP). Self-sleep's only real advantage.
+- Reboot survival: cron/SES respawns after a node reboot; a `pluginctl run` or
+  bare continuous pod does NOT come back on its own.
+- Crash blast radius: a crash in a self-sleep loop kills ALL future wakes; a
+  cron tick dies alone and the next tick is a clean pod (self-healing).
+- Scheduler visibility: cron/SES jobs get restart policy + accounting; a
+  `pluginctl run` pod is invisible to SES.
+- Prereq: SES cron needs the plugin's ECR catalog record; `pluginctl run` does
+  not. The seen-store makes one-shot batches equivalent to self-sleep batches
+  (each fresh pod reads persisted dedup memory, processes only new frames).
+Lean: long-period / short-batch / shared big-memory node → SES one-shot cron.
+Dedicated GPU or cold-start-sensitive → self-sleep.
 
 **Diagnosis pattern** (proved root cause without guessing): query the data API
 for `env.count.total` records PER DAY over the suspected window. A collapse in
@@ -38,26 +65,68 @@ BioCLIP 2.5 ViT-H/14 is a ~28 GB image/model. As a one-shot it RELOADS the
 whole model every cron tick. Continuous loads once and keeps it warm. Another
 reason to prefer continuous for large vision models on the bird cam.
 
-## 3. Two always-on GPU plugins CANNOT share one GPU (the contention trap)
+## 3. GPU sharing: THREE distinct kinds of "contention" — do not conflate them
 
-When yolo AND bioclip were both one-shot `*/10`, they took turns: each grabbed
-the single Thor GPU for ~30s, then freed it. Fine.
+CRITICAL DISTINCTION (an earlier version of this ref wrongly claimed "two
+always-on GPU plugins CANNOT share one GPU" as if it were a hardware/GPU-memory
+law — it is NOT). There are THREE independent mechanisms; know which one you're
+actually hitting before choosing a fix:
 
-When you make BOTH continuous, they conflict. Observed: after deploying yolo
-continuous (job 5650, GPU held 24/7) and THEN bioclip continuous (job 5651),
-SES reported job 5651 "Running" but **no pod was ever created on the node** —
-no `bioclip-species-classifier-5651` pod object existed at all. yolo (submitted
-~8 min earlier) won the GPU; the WES node scheduler would not place a second
-continuous GPU plugin.
+**(a) GPU COMPUTE (SM time) — time-sliced, NEVER exclusive by default.** The CUDA
+driver interleaves kernels from all processes. A plugin contends for compute
+ONLY while it is actively issuing kernels (during inference — a few seconds per
+batch). A plugin that is **sleeping** (`time.sleep(600)` between wakes, or idle
+between captures) issues ZERO kernels and is not on the GPU computationally at
+all — a co-tenant gets 100% of the compute. So a **resident-but-sleeping model
+does NOT lock out another plugin's compute.** True hard compute exclusion only
+happens if a process explicitly claims it: `nvidia-smi -c EXCLUSIVE_PROCESS`
+compute mode, or CUDA MPS configured to serialize. We do NOT set those, so
+compute is shared.
 
-Key tell: SES `stat -j <id>` says "Running" (cloud-level schedule accepted) but
-`kubectl get pods -n ses` shows NO pod for that job. SES "Running" ≠ pod
-running. Always confirm with the actual pod list + the data API.
+**(b) GPU MEMORY (VRAM/unified) — the only real STEADY-STATE cost, node-dependent.**
+A loaded model + CUDA context stay resident for the pod's whole life, including
+sleep windows (YOLO11x ≈ 5 GB; BioCLIP ViT-H/14 ≈ 28 GB). Whether that blocks a
+co-tenant is PURELY a function of the node's memory budget:
+- **Thor / H00F — Jetson UNIFIED memory ≈ 122 GB (~69 GB free, verified 2026-07).**
+  5 GB + 28 GB resident is a rounding error → **two heavy models coexist fine;
+  memory contention is a NON-ISSUE.** A sleeping YOLO here does NOT lock out
+  BioCLIP — neither on compute (it's asleep) nor on memory (ample headroom).
+- **NX / Xavier / small discrete GPU ≈ 8–16 GB VRAM.** Two resident heavy models
+  EXHAUST VRAM → the second OOMs or fails to load. THIS is where "can't share"
+  is real, and the fix is to free VRAM between runs (one-shot cron, or windowing
+  — see Resolution A).
+So: **"does a sleeping plugin block another" is answered by VRAM headroom, not by
+the mere fact that it's resident.** Check `free -h` / `tegrastats` RAM before
+assuming contention.
 
-Note: Thor/WES does NOT express GPU as a k8s `nvidia.com/gpu` resource request
-— `selector: resource.gpu: "true"` is a Waggle SCHEDULER selector, so
-`kubectl describe node` shows no GPU allocation. The contention is enforced by
-the WES scheduler, invisible in plain k8s resource views.
+**(c) The WES SCHEDULER placement policy — a SOFTWARE gate, not a hardware limit.**
+Observed on H00F: yolo continuous (job 5650) placed first, then bioclip continuous
+(job 5651) — SES `stat -j 5651` said "Running" but **no pod was ever created**.
+This was NOT the GPU refusing them — it was the WES node scheduler declining to
+place a second plugin holding `selector: resource.gpu: "true"`. Thor/WES does NOT
+model the GPU as a k8s `nvidia.com/gpu` resource; `resource.gpu: "true"` is a
+Waggle SCHEDULER selector, so `kubectl describe node` shows no GPU allocation and
+the block is invisible in plain k8s views. IMPORTANT NUANCE: `pluginctl run` pods
+go to the `default` namespace and do NOT carry this SES selector, so two
+`pluginctl run` GPU pods (e.g. a producer + a consumer, or two consumers) DO
+co-schedule on Thor and run concurrently — the placement gate is specific to the
+SES `resource.gpu` selector path, not a universal "one GPU plugin per node" rule.
+
+Key tell for (c): SES `stat -j <id>` "Running" (cloud schedule accepted) ≠ a pod
+actually running. ALWAYS confirm with `kubectl get pods -n ses` + the data API.
+
+### Decision shortcut — which mechanism am I hitting, and does it exclude other code?
+- Plugins EXCLUDE each other's COMPUTE only under explicit EXCLUSIVE_PROCESS/MPS
+  (we don't use them) → normally compute is shared, sleeping plugins cost 0.
+- Plugins contend on MEMORY only when resident models exceed the node's RAM/VRAM
+  → real on small-VRAM nodes, negligible on Thor's 122 GB unified memory.
+- Plugins get BLOCKED FROM PLACEMENT by the WES scheduler's `resource.gpu`
+  selector when submitted as SES jobs → a scheduler policy, dodge-able via
+  windowing/one-shot, or (for testing) via `pluginctl run` which skips the gate.
+Only (a)-with-EXCLUSIVE and (b)-on-a-small-node are genuine HARDWARE exclusion.
+(c) is a schedule policy. On Thor, none of them force serialization for typical
+5–28 GB models — so co-running is fine and the continuous-vs-cron choice there is
+about RELIABILITY (reboot survival, self-healing), not GPU contention.
 
 **Resolution A — WINDOWED time-slicing (preferred when you want BOTH models
 running on their own cadence on one GPU).** Add a `--max-runtime N` flag to each
@@ -161,8 +230,11 @@ classifier samples sparsely; prefer A when both models need real coverage.
 
 **Three-way mode table to ship in DOCKER-BUILD.md** (Windowed / Continuous /
 One-shot): Windowed = `--continuous Y --interval 15 --max-runtime 600` +
-`cronjob('0 * * * *')`, best for "birds on a single-GPU node shared with another
-model"; Continuous = always-on, needs a dedicated GPU; One-shot = slow scenes.
+`cronjob('0 * * * *')`, best for "birds on a MEMORY-CONSTRAINED single-GPU node
+shared with another model"; Continuous = always-on (fine on a big-unified-memory
+node like Thor even alongside other GPU plugins — see §3(b); "needs a dedicated
+GPU" is only true on small-VRAM nodes); One-shot = slow scenes OR when you want
+self-healing + reboot survival (each tick is a clean pod).
 
 ## 3b. In-process fixed-period loop for a --continuous plugin (drift-free, skip-on-overrun)
 

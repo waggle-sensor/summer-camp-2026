@@ -1,8 +1,7 @@
 # pywaggle upload_file: object naming, metadata, and timestamp semantics
 
-Verified by reading [pywaggle](https://github.com/waggle-sensor/pywaggle) `main`
-source (`src/waggle/plugin/plugin.py`, uploader.py, rabbitmq.py, data/vision.py,
-data/timestamp.py). Package: <https://github.com/waggle-sensor/pywaggle>. Applies to
+Verified by reading pywaggle `main` source (src/waggle/plugin/plugin.py,
+uploader.py, rabbitmq.py, data/vision.py, data/timestamp.py). Applies to
 pywaggle 0.56.x. Use this when reasoning about how uploaded images/files are
 named, what metadata travels with them, and which timestamp a record carries.
 

@@ -111,10 +111,10 @@ Sage plugins. (Code change → ECR rebuild + version bump to take effect.)
 
 - **Auth:** BCS/FLV stream AND the CGI snapshot endpoint reject HTTP basic auth
   (`http://user:pass@ip/...`) → ffmpeg `End of file` / exit 187. Credentials MUST
-  be QUERY PARAMS: `...&user=USER&password=PASS`. Single-quote the whole URL in
+  be QUERY PARAMS: `...&user=USER&password=CAMERA_PASSWORD`. Single-quote the whole URL in
   shell to protect `!` (history expansion), `&`, `?`.
-  - Working FLV (audio): `http://IP:PORT/flv?port=1935&app=bcs&stream=channel0_sub.bcs&user=CAMERA_USER&password=CAMERA_PASSWORD`
-  - Working snapshot (image): `http://IP:PORT/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=snap&user=CAMERA_USER&password=CAMERA_PASSWORD&width=640&height=360`
+  - Working FLV (audio): `http://IP:PORT/flv?port=1935&app=bcs&stream=channel0_sub.bcs&user=sage&password=...`
+  - Working snapshot (image): `http://IP:PORT/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=snap&user=sage&password=...&width=640&height=360`
 - **Contrast — Mobotix M16:** MxPEG stream DOES use HTTP basic auth
   (`http://user:pass@ip/control/faststream.jpg?stream=MxPEG&needlength`).
 - **No mic gain control:** Reolink's web UI "Audio" page has only Record-Audio

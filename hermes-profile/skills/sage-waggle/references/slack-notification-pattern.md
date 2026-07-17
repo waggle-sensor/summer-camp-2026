@@ -46,7 +46,7 @@ Two Slack mechanisms, each serving a different purpose:
 Store in `secrets/` directory (gitignored):
 - `secrets/webhook-url.txt` — one line, the webhook URL
 - `secrets/bot-secrets` — shell export format: `export SLACK_BOT_TOKEN="xoxb-..."` etc.
-- `<YOUR_SAGE_TOKEN_FILE>` — Sage portal access token for image downloads
+- `secrets/sage-token.txt` — Sage portal access token for image downloads
 - `chmod 600` all secrets files
 
 ## Querying for Detections (Data API)

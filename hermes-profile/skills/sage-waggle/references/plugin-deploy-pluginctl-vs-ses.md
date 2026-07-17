@@ -24,7 +24,7 @@ registration gate entirely. Register in the portal only when moving to scheduled
 
 ## H00F node-local registry often DOWN
 `pluginctl build` pushes the built image to the node-local WES registry at
-`10.31.81.1:5000` (on the `lan0` interface). On H00F `lan0` is frequently
+`NODE_CONTROL_PLANE_IP:5000` (on the `lan0` interface). On H00F `lan0` is frequently
 `NO-CARRIER / state DOWN`, so that push fails (`connection refused`). Workaround:
 push the image to **Sage ECR** (`registry.sagecontinuum.org/<namespace>/<name>:<ver>`)
 and `pluginctl run` that fully-qualified ref — pulls over WAN, sidestepping lan0.
@@ -39,6 +39,40 @@ from the environment, never as flags/argv. Inject via a k8s Secret (`envFrom`/`s
 in the SES pod spec) or `pluginctl run --env-from <file>`. NEVER put the password in
 args or commit it. (Test camera user for the H00F hummingcam exploration: username
 `test`; ask Pete for the current password — do not store it.)
+
+## STOPPING a scheduled job: must be done at the CLOUD (SES), not locally
+To free GPU/space on a node you often need to stop running science jobs (e.g. yolo/
+bioclip). The node scheduler (`nodescheduler` pod `wes-plugin-scheduler` in `default`)
+runs with `-goalstream-url https://es.sagecontinuum.org/api/v1/goals/<VSN>/stream` —
+**goals are STREAMED FROM THE CLOUD**. Consequences (learned freeing H00F, 2026-07):
+- Deleting the pod (`kubectl delete pod`) does NOT stick — jobs are short-lived pods
+  the scheduler re-spawns each cron tick; the pod you see may already be gone.
+- Editing/removing the local `waggle-plugin-scheduler-goals` configmap does NOT stick
+  (it's empty anyway) — the node re-syncs goals from the cloud stream within seconds.
+- There is **no goals CRD** on the node (`kubectl get wagglejobs/goals/...` → "server
+  doesn't have a resource type") and the scheduler API is NOT on node `localhost:9770`.
+- The ONLY durable stop is via **SES with the user's token**:
+  ```sh
+  sesctl --server https://es.sagecontinuum.org --token "$SES_USER_TOKEN" stat -A   # find job IDs
+  sesctl --server https://es.sagecontinuum.org --token "$SES_USER_TOKEN" rm --suspend -j <id>
+  ```
+  `sesctl` exists on the node (`/usr/bin/sesctl`) AND bundled in the scheduler pod
+  (`/app/sesctl-linux-arm64`), but BOTH need a valid token — there is none on the node
+  and none in env by default. **If you don't have `$SES_USER_TOKEN`, STOP and ask the
+  user for it** — do not fake a local stop that won't hold for the test's duration.
+
+## Finding the real job names to stop
+Job/goal names are NOT always what the user calls them ("Yolo"/"BioClip" ≠ pod names).
+Discover the actual scheduler goals from the scheduler log:
+```sh
+sudo kubectl logs -n default deploy/wes-plugin-scheduler --tail=200 \
+  | grep -oE "The goal [a-z0-9-]+ exists" | sort -u
+```
+On H00F this revealed: `yolo-hummingcam`, `bioclip-hummingcam`, `insect-bioclip`,
+`sage-vision-detect-bioclip-h00f`, `birdnet-reolink`, `edgerunner-demo`. Map the
+user's shorthand to these exact names and CONFIRM scope before suspending (one label
+like "bioclip" often maps to several goals). Thor's `nvidia-smi` returns `[N/A]` for
+memory — use tegrastats for GPU headroom, not the standard nvidia-smi query.
 
 ## Dockerfile must COPY all modules
 image-sampler2 split into acquire.py / metadata.py / nodemeta.py / upload.py / app.py.

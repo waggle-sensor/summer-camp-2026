@@ -86,7 +86,7 @@ Camera.snapshot() → detector.detect(frame) → plugin.publish() + plugin.uploa
 ```
 
 Key requirements.txt packages:
-- `pywaggle[all]>=0.56.0` — always include ([github.com/waggle-sensor/pywaggle](https://github.com/waggle-sensor/pywaggle))
+- `pywaggle[all]>=0.56.0` — always include
 - `ultralytics>=8.3.70` — for YOLO (8.4.66+ tested)
 - `pybioclip>=2.1.5` — for BioCLIP2 (recommended over raw open_clip)
 - `open_clip_torch>=2.20.0` + `timm==1.0.15` — for BioCLIP (legacy, use pybioclip instead)

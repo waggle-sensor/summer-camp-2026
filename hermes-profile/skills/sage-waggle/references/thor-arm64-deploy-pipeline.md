@@ -4,18 +4,40 @@ When the ECR portal build fails for a Thor/arm64 plugin, this is the
 end-to-end path that actually works. Proven on H00F (Jetson Thor) for
 yolo-object-counter, bioclip-species-classifier, and birdnet-species.
 
-## The two blockers this solves
+## CRITICAL: CPU-base and GPU/NVIDIA-base plugins have DIFFERENT ECR fate
 
-1. **ECR portal build crashes on arm64 NVIDIA images.** The ECR/Jenkins
-   build pipeline runs on x86_64 and cross-builds `linux/arm64` under QEMU
-   emulation. The NVIDIA base image (`nvcr.io/nvidia/pytorch:25.08-py3`)
-   contains aarch64 binaries QEMU cannot emulate; the `pip install` /
-   `import torch` step aborts with:
-   `qemu: uncaught target signal 6 (Aborted) - core dumped`, build exit 134.
-   Removing `linux/amd64` from sage.yaml does NOT help — the crash is in the
-   arm64-under-QEMU path itself, not the amd64 build. (BirdNET on
-   `python:3.12-slim` does NOT hit this — CPU-only, native wheels — but we
-   keep all plugins on one deploy path for consistency.)
+There are TWO INDEPENDENT ECR build blockers. They were fixed on DIFFERENT
+timelines, and conflating them will burn you (it did, 2026-07-10):
+
+- **Infra #2 — buildkit `/proc/acpi` runc bug: FIXED 2026-07.** Affected EVERY
+  plugin (arch-independent); every `RUN` step failed at container init. Once
+  fixed, `RUN` steps start normally.
+- **Infra #3 — QEMU crash on arm64 NVIDIA/CUDA base: STILL OPEN.** The
+  ECR/Jenkins pipeline runs on x86_64 and cross-builds `linux/arm64` under QEMU
+  (`buildctl ... --opt platform=linux/arm64`). NVIDIA CUDA base images
+  (`nvcr.io/nvidia/pytorch:...`) hold aarch64 binaries QEMU can't emulate; `pip`/
+  `import torch` aborts with `qemu: uncaught target signal 6 (Aborted)`, exit 134.
+
+CONSEQUENCE — the branch that matters before you touch any deploy doc:
+- **CPU-only plugins** (birdnet, `python:3.12-slim`, native wheels, no CUDA):
+  #2 was their ONLY blocker → they **build in ECR now**. Standard "Register and
+  Build" is the primary path (see `ecr-build-to-ses-cutover`).
+- **GPU/NVIDIA-base plugins** (yolo, bioclip, `nvcr.io/nvidia/pytorch`): they hit
+  BOTH #2 and #3. #2 is fixed but #3 is NOT → they **STILL fail in ECR** and
+  STILL require native-Thor-build + k3s side-load (this file). There is **no
+  native arm64 builder** yet.
+
+HARD LESSON (do NOT repeat): a birdnet ECR success does NOT prove yolo/bioclip
+will build. In 2026-07 the user believed "CI added a native arm64 builder";
+docs were rewritten asserting ECR-primary for yolo; the v0.3.1 ECR build then
+FAILED at exactly the QEMU `signal 6 / exit 134` step, and every ECR-primary
+doc had to be reverted. Before rewriting a GPU plugin's docs to claim ECR
+works: (1) check the plugin's base image — is it `nvcr.io/nvidia/...` or CUDA?
+If so #3 applies. (2) TREAT "a native builder exists" as UNVERIFIED until an
+actual ECR build of THAT plugin (or another NVIDIA-base one) succeeds. Do not
+promote ECR to primary in docs on a belief; wait for the build to prove it.
+Note: dropping `linux/amd64` from sage.yaml does NOT help — the crash is in the
+arm64-under-QEMU path itself.
 
 2. **`docker push` to the registry is denied.** A Sage portal access token
    authenticates to `registry.sagecontinuum.org` (login succeeds) but is
@@ -40,7 +62,7 @@ fails with:
 So you need BOTH: the image sideloaded into k3s (serves the pull) AND a
 catalog metadata record (passes SES validation).
 
-## The pipeline (run on the Thor node, e.g. ssh beckman@node-H00F.sage)
+## The pipeline (run on the Thor node, e.g. ssh USER@node-<VSN>.sage)
 
 ```bash
 # 0. PRE-BUILD SMOKE TEST (do this whenever you refactored startup/import code).
@@ -103,6 +125,78 @@ curl -s -X POST https://data.sagecontinuum.org/api/v1/query \
 # meta-key pitfall below.
 ```
 
+## Wrap the pipeline in one idempotent deploy script (do this per-repo)
+
+Steps 1-5 above are 4-5 hand-run commands copy-pasted from a deploy doc every
+release — error-prone and hostile to any downstream operator. Wrap them in a
+single `scripts/deploy-sideload.sh` living in the plugin repo. Proven shape
+(sage-yolo, 2026-07-11):
+
+- **Default run = build -> import -> register** (steps 1-4, all idempotent so
+  re-running is safe). **`--submit jobs/<file>.yaml` is opt-in** (step 5) so a
+  double-run never double-submits an SES job.
+- **Parse name/namespace/version/source.url straight from `sage.yaml`** —
+  NOTHING hardcoded. A version bump then needs zero edits to the script (matches
+  Pete's out-of-the-box rule: no hardcoded values forcing downstream edits).
+  `--version` overrides for edge cases. Simple sed extractors work:
+  `sed -nE 's/^version:[[:space:]]*"?([^"#]+)"?.*/\1/p' sage.yaml | head -n1`.
+- **Auto-detect `--from-version`** by GETting the ECR catalog
+  (`/api/apps/<ns>/<name>`) and picking the latest prior version. Fail with a
+  clear message when the app has NEVER been registered (first version still
+  needs one portal registration, or an explicit `--from-version`).
+- **Drift check**: warn when any `jobs/*.yaml` `image:` tag != the sage.yaml
+  version (catches the multi-place-edit trap where a bump misses a job file),
+  and HARD-REFUSE `--submit` on a job whose image tag != the deployed tag.
+- **Tokens demanded only by the step that uses them**: `SAGE_TOKEN` for
+  register, `SES_USER_TOKEN` for `--submit`. Do NOT check them up front.
+
+PITFALLS that bit me writing it (all caught by ad-hoc testing, fix before commit):
+- **`--dry-run` must require NO tokens and hit NO network.** First cut put the
+  `SAGE_TOKEN`/`SES_USER_TOKEN`/`need sesctl` guards BEFORE the dry-run branch,
+  so `--dry-run` died on a missing token instead of just printing the plan.
+  Gate every token check and binary-existence check behind `if DRY_RUN then
+  print-plan else <real guards + action>`.
+- **`set -euo pipefail` + a trailing `&&` one-liner leaks a non-zero exit.**
+  A final `[ "$drift" -eq 1 ] && warn ...` evaluates false on the happy path,
+  making the SCRIPT exit 1 on success. Use a full `if ...; then warn; fi` and an
+  explicit `exit 0` at the end. Verify: clean run exits 0, drift-WARNING run
+  ALSO exits 0 (drift is a warning not a failure), bad-arg exits 1.
+- **NEVER pipe `k3s ctr images ls` into `grep -q` under `set -o pipefail` — it
+  false-fails on SUCCESS (the nastiest bug of the whole script; only surfaced on
+  live H00F, 2026-07-11).** The Step-2 post-import check was
+  `sudo k3s ctr images ls | grep -q "$TAG" && ok ... || die "not found"`. The
+  image WAS imported (verified 10.7 GiB, `io.cri-containerd.image=managed`), yet
+  the script `die`d with "image not found." Cause: the images list is long;
+  `grep -q` exits the instant it matches and SIGPIPEs the still-writing `ctr ls`;
+  under `pipefail` that 141 becomes the pipeline's exit code, so `|| die` fires
+  despite a match. FIX: capture first, then match in pure bash — no pipe, no
+  SIGPIPE:
+  `imgs="$(sudo k3s ctr images ls)"; if [[ "$imgs" == *"$TAG"* ]]; then ok; else die; fi`.
+  Same class bites `... | grep -oE ... | head -n1` for the sesctl job-id parse —
+  guard it with `|| true`. General rule: any `<big-producer> | grep -q|head`
+  under pipefail can 141-false-fail; capture-to-var + bash matching is safe.
+- **This SIGPIPE bug is invisible to `--dry-run` and the mktemp harness** —
+  both SKIP the real `ctr images ls` check, so `bash -n` + dry-run + fixture
+  tests all pass while the real deploy false-fails. LESSON: the FIRST real run
+  on the node is the actual verification for a side-load script; a green dry-run
+  is necessary, not sufficient. Run it on Thor and watch Step 2's exit before
+  calling the tooling done. A standalone regression that reproduces the SIGPIPE
+  mechanism (large producer piped to `grep -q` under pipefail, assert the wrong
+  branch fires) lives at `scripts/sigpipe-pipefail-regression.sh` in this skill —
+  run it to prove the capture-to-var idiom survives where the pipe fails.
+- Keep the manual steps in DOCKER-BUILD.md as the reference the script
+  automates; add a short "Quick deploy (side-load)" banner at the top pointing
+  at the script. Don't delete the runbook — the script IS the runbook, executable.
+
+Verification without a canonical suite: build throwaway repo fixtures under a
+`mktemp -d` temp dir (a fake `sage.yaml` with distinct ns/name/version + a
+matching job YAML + a mismatched one), run the script `--dry-run` against them,
+and assert parsed tag / drift warning / `--submit` refusal on mismatch / exit
+codes. Isolated fixtures prove the parsing generically (not just against the one
+real repo). NOTE: the real docker/k3s/sesctl calls only run on Thor — from a dev
+box only `--dry-run` + syntax (`bash -n`) are verifiable; say so explicitly
+rather than claiming full verification.
+
 ## ECR catalog registration via API (the key discovery)
 
 You do NOT need the portal UI to register a catalog version.
@@ -120,6 +214,29 @@ You do NOT need the portal UI to register a catalog version.
   if the version is already registered (treat as success / idempotent).
 
 Auth header scheme is `Authorization: Sage <token>` (not Bearer/Token).
+
+### FIRST-EVER version of a NEW app: clone-from-prior FAILS; use `pluginctl run` (VERIFIED sage-yolo2, H00F 2026-07-14)
+`register-ecr-version.py` (and `deploy-sideload.sh`'s auto-detect) CLONE metadata
+from an existing `/apps/<ns>/<name>/<from-version>` — so for a brand-NEW app name
+with ZERO prior versions the register step has nothing to clone and dies ("no prior
+catalog version found"). Two ways forward, in preference order:
+1. **If you only need a real on-node run (dev/test/first-deploy): use
+   `sudo pluginctl run` — it BYPASSES the ECR-catalog gate entirely.** No catalog
+   record, no registration, no portal. This is the correct run mode for a new
+   plugin until you actually want an SES cron. The image just needs to be
+   side-loaded into k3s (build → `k3s ctr images import`). This is what shipped
+   sage-yolo2 2.0.0 for its Stage-7 e2e — full producer→cache→consumer round-trip,
+   frame-anchored counts confirmed in the data API, with NO ECR catalog record.
+2. **If you need the SES path (cron, reboot-survival, scheduler):** the catalog
+   DOES need a first record. Either register once via the portal UI, or POST a
+   full record built from `sage.yaml` directly to `/api/submit` (all fields
+   inline, `description` REQUIRED) instead of cloning. NOTE: writing a new catalog
+   record is a real side-effecting action — get the user's explicit OK before
+   POSTing (the registration POST was declined once this session; `pluginctl run`
+   was the right call for a stopping point that didn't need SES).
+Decision rule: **`pluginctl run` for run-it-now; ECR-catalog register only when
+SES scheduling is actually required.** Don't register a catalog version just to
+prove a plugin works — side-load-run proves it end-to-end without it.
 
 ## Pitfalls learned this session
 
@@ -207,9 +324,88 @@ Auth header scheme is `Authorization: Sage <token>` (not Bearer/Token).
   to a clearly-marked placeholder (vsn) and OMIT gps (never fabricate coordinates).
   The Sage CI team is adding runtime "GPS call" + "VSN call" APIs (~mid-2026);
   until then a placeholder is the correct interim.
+- **EXCEPTION / UPDATE (verified W06C 2026-07-11): a GPS-EQUIPPED node DOES let a
+  plugin self-locate at runtime — via the DATA PLANE, not env/manifest.** The
+  "cannot learn GPS at runtime" rule above is about env vars + the in-pod manifest
+  (both genuinely unavailable). But a node with a real GPS sensor (e.g. W06C's
+  VK-162) runs a device plugin that PUBLISHES `sys.gps.lat` / `sys.gps.lon` to
+  Beehive, and any plugin can `plugin.subscribe("sys.gps.lat","sys.gps.lon")` and
+  read a live fix off the message bus. This is the ONE working runtime-location
+  mechanism today. Our birdnet app.py implements it (`_coords_from_live_gps()`,
+  gated behind the `--gps-subscribe` store_true flag; resolution order when
+  `--lat/--lon` are unset = live sys.gps.* → manifest → env → else geo-filter off).
+  HOW TO TELL A NODE HAS IT before deploying (data API, node-agnostic — no ssh):
+  `search_measurements("gps|lat|lon", node_id=<VSN>, time_range="-2h")` and look
+  for `sys.gps.lat/lon` updating, `sys.gps.mode`=3 (3D fix), `sys.gps.satellites`
+  >=4, and `sys.sanity_status.wes_gps_server`=0 (healthy). If present → deploy the
+  job with `--gps-subscribe` and NO hardcoded `--lat/--lon` (portable, self-locating,
+  correct if the node moves). If ABSENT (fixed node like H00F publishes no
+  sys.gps.*) → fall back to explicit `--lat/--lon` from the node-info GPS. So the
+  per-node choice is: live-GPS subscribe where the stream exists, hardcoded coords
+  where it doesn't — check the data plane first, don't assume.
+  **BUT `--gps-subscribe` DOES NOT RELIABLY WORK AS SHIPPED (verified FAILED on
+  W06C 2026-07-11) — do not assume the flag alone gives you geo-filtering.** The
+  pod log showed `No node location available (live GPS / manifest / env all
+  absent) — geo-filtering disabled`, i.e. BirdNET fell back to the GLOBAL species
+  list, even though W06C's data plane was publishing a healthy `sys.gps.*` 3D fix.
+  ROOT CAUSE: `_coords_from_live_gps()` opens a `plugin.subscribe(...)` with only a
+  ~3-second timeout, but the node's GPS device plugin publishes `sys.gps.lat/lon`
+  just once every ~2 MINUTES. The subscribe only receives messages emitted DURING
+  its short window, so it misses the slow GPS heartbeat ~97% of the time and gives
+  up. The subscribe isn't broken; the window is far too short for the publish
+  cadence. IMPLICATIONS:
+    - INTERIM for a FIXED GPS node: still pass explicit `--lat/--lon` (coords are
+      stable; from node-info or the manifest) so geo-filtering is correct TODAY.
+      `--gps-subscribe` is currently cosmetic on such nodes.
+    - PROPER FIX (app.py change, not yet done): resolve live location by QUERYING
+      the data API for the LAST `sys.gps.lat/lon` value
+      (`POST data.sagecontinuum.org/api/v1/query {"start":"-15m","filter":{"vsn":
+      <VSN>,"name":"sys.gps.lat"}}`) instead of a 3s in-pod subscribe — that reads
+      the most-recent published fix instantly and robustly, and makes the flag work
+      on mobile nodes too. (A much longer subscribe timeout, >2 min, would also
+      catch it but wastes pod time each one-shot tick.)
+    - HOW TO CATCH THIS: it's SILENT in the data plane — the plugin still publishes
+      detections + heartbeat, just against the wrong (global) species list. The
+      ONLY proof is the pod's STARTUP LOG. Catch a one-shot pod live with a watch
+      loop on the node (`ssh waggle@waggle-dev-node-<vsn>` →
+      `for i in $(seq 1 60); do pod=$(sudo kubectl get pods -n ses|grep <name>|
+      tail -1|awk '{print $1}'); sudo kubectl logs -n ses $pod 2>/dev/null|grep -i
+      location && break; sleep 3; done`) and read whether it says
+      "Node location from live sys.gps.* stream" (WORKED) or "No node location
+      available ... geo-filtering disabled" (FELL BACK — filter is off).
+- **CPU-only plugins need NO side-load — they PULL from ECR (don't run this whole
+  pipeline for them).** This entire file is the GPU/NVIDIA workaround. A CPU plugin
+  (birdnet-species: python:3.12-slim + TFLite, no CUDA) builds cleanly in ECR, so
+  its image is a normal pullable registry manifest — deploying it to a new node is
+  just `sesctl create/submit` with the existing `beckman/<name>:<ver>` image; no
+  native build, no `k3s ctr import`, no register step. CONFIRM pull-ability in one
+  call before deploying: `GET ecr.sagecontinuum.org/api/apps/<ns>/<name>` lists the
+  registered versions, and an HTTP 200 on `/apps/<ns>/<name>/<ver>` means the
+  catalog record exists. Reserve build→import→register for NVIDIA-base plugins only.
+- **`sesctl stat` shows only YOUR OWN jobs, not other users'.** To replace another
+  user's job (e.g. take over a node from a collaborator), you CANNOT see their
+  numeric job ID with your token — get the ID from them or have them suspend/remove
+  it. You can still SEE what they're running via the data plane
+  (`search_measurements`/`get_node_all_data` on the node) to read their plugin,
+  cadence, and capture duration off `plugin.duration.input`/`loadmodel` timestamps
+  — enough to match their sampling/inference rate in your replacement job.
+  You can also read the job's owner + metadata with `sesctl stat -j <id>` even
+  when it's not yours (read is allowed; write is not). And you can SEE their pod
+  on the node itself via the waggle gateway: `ssh waggle@waggle-dev-node-<vsn>`
+  then `sudo kubectl get pods -A` lists `ses/<plugin>-<jobid>` regardless of
+  submitter — that's how you recover the numeric job ID without asking.
+  DEAD-END — do NOT burn turns on it (verified W06C 2026-07-11): you CANNOT stop
+  another user's SES job by any flag combination. `sesctl rm -s <id>` → `400 user
+  "X" is not the owner of job "<id>"`; adding `--override --force` → `400 User X
+  does not have permission to override to the job` (the override flag itself needs
+  an elevated/admin grant a normal user token lacks). Killing the pod on the node
+  with `kubectl delete pod` is also futile — the SES cron respawns a fresh pod on
+  the next tick (whack-a-mole). The ONLY ways to stop it: the job's OWNER runs
+  `rm -s`/`rm`, or a Sage ADMIN does it. Even with verbal permission from the
+  owner, the clean path is to have THEM suspend/remove it, then you launch yours.
 - **Side-loading via `pluginctl run` (no ECR, no registry) for a quick real
   round-trip.** `pluginctl build`'s push to the node-local registry
-  (`10.31.81.1:5000`) fails when `lan0` is down. Sidestep it entirely: build with
+  (`NODE_CONTROL_PLANE_IP:5000`) fails when `lan0` is down. Sidestep it entirely: build with
   podman, tag as `docker.io/library/<name>:<ver>`, `podman save | sudo k3s ctr
   images import -`, then `sudo pluginctl run --kubeconfig /etc/rancher/k3s/k3s.yaml
   <img> -- <args>`. The beckman kubeconfig is namespace-scoped and CANNOT create

@@ -31,8 +31,7 @@ to match the dominant convention and keep cross-plugin queries clean.
 ## The mechanism — `plugin.timeit` (don't hand-roll time math)
 
 pywaggle exposes a context manager that times the block and **auto-publishes**
-the duration. Verified in [pywaggle](https://github.com/waggle-sensor/pywaggle)
-source (`src/waggle/plugin/plugin.py`):
+the duration. Verified in pywaggle source (`src/waggle/plugin/plugin.py`):
 
 ```python
 @contextmanager

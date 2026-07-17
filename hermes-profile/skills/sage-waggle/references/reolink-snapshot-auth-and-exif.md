@@ -21,7 +21,7 @@ curl -s -o /tmp/snap.jpg \
 
 - Query-param auth works for READS/Snap **when the credentials are valid**.
 - **Credentials can change out from under you.** After the camera was
-  "fixed"/rebooted, the previously-working `sage`/`CAMERA_PASSWORD` guest AND
+  "fixed"/rebooted, the previously-working `sage`/`CAMERA_PASSWORD=GUEST` guest AND
   `admin`/`SageRoot=ADMIN` both returned `-7`. The actually-working admin login
   was `admin` / `SageRoot` (password had changed). ALWAYS confirm current creds
   with the owner before assuming; don't trust stale memory entries blindly.
@@ -41,7 +41,7 @@ So: -7 → first suspect wrong/changed credentials, THEN encoding.
 
 ## SSH + password-with-`!` pitfalls (cost real time)
 
-Passing `cmd ... password=CAMERA_PASSWORD ...` through
+Passing `cmd ... password=CAMERA_PASSWORD=GUEST ...` through
 `ssh node 'curl "...!..."'` risks the `!` being altered by bash history
 expansion / nested-quote mangling. Robust patterns:
 - Write the command/script to a local file, `scp` it to the node, run it there.

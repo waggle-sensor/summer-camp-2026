@@ -9,7 +9,7 @@ login attempts rediscovering them.
 ## Snapshot endpoint
 
 ```
-http://CAMERA_IP:PORT/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=<cachebuster>&user=admin&password=PASSWORD
+http://CAMERA_IP:PORT/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=<cachebuster>&user=admin&password=CAMERA_PASSWORD
 ```
 
 - On SUCCESS the body is the **raw JPEG bytes** (starts `FF D8`, ends `FF D9`).
@@ -70,6 +70,6 @@ Camera passwords must never land in argv / shell history / committed files:
 ## H00F hummingcam specifics
 
 - URL: `http://CAMERA_IP:PORT` (port 80 mapped to 10000). Reachable from the
-  NODE, not from Flint — run captures on-node (`ssh beckman@node-H00F.sage`,
+  NODE, not from Flint — run captures on-node (`ssh USER@node-<VSN>.sage`,
   `export XDG_RUNTIME_DIR=/run/user/$(id -u)`).
 - Only `admin` creds work. `cmd=Snap` returns a bare 4K JPEG with no metadata.

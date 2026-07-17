@@ -74,7 +74,7 @@ success = result.returncode == 0
 
 **Alternative when NRP is down**: SSH to the node and grab a fresh camera snapshot directly from the IP camera, bypassing NRP entirely:
 ```bash
-ssh beckman@node-H00F.sage "curl -s 'http://IP:PORT/cgi-bin/api.cgi?cmd=Snap&channel=0&...'" > /tmp/snapshot.jpg
+ssh USER@node-<VSN>.sage "curl -s 'http://IP:PORT/cgi-bin/api.cgi?cmd=Snap&channel=0&...'" > /tmp/snapshot.jpg
 ```
 
 ## Slack integration
@@ -122,7 +122,7 @@ secrets/
 ├── webhook-url.txt      # Slack webhook URL (one line)
 ├── bot-secrets           # export SLACK_BOT_TOKEN="xoxb-..."
 │                         # export SLACK_CHANNEL_ID="C0..."
-├── <YOUR_SAGE_TOKEN_FILE>        # Sage portal access token (one line)
+├── sage-token.txt        # Sage portal access token (one line)
 └── curl-example.txt      # Example curl with webhook
 ```
 

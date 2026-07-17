@@ -30,7 +30,7 @@ probing artifacts (below). Trust the method, not the first scary numbers.
    `job` and NOT `plugin` for the human name. `plugin` = the full
    `registry.../<name>:<ver>` tag. (See ref image-upload-provenance-and-linking.)
 2. Auth to fetch bytes: `-u "beckman:$TOKEN"` where token file is
-   `<YOUR_SAGE_TOKEN_FILE>` (strip trailing
+   `~/AI-projects/slack-hummingbird/secrets/sage-token.txt` (strip trailing
    newline: `tr -d '\n'`). Unauthenticated fetch → HTTP 401.
 3. Probe each backing file:
    `curl -s -o /dev/null -w "%{http_code}" --max-time 30 -L -u "beckman:$TOK" "$url"`
@@ -72,6 +72,38 @@ probing artifacts (below). Trust the method, not the first scary numbers.
   lives at `scripts/query-data.py` for the query side; the byte-probe loop is
   small enough to inline (see the recipe above). If you background a long census,
   spacing + `--max-time` keep it from hanging the foreground (60 s cap).
+
+## Diagnosing the ON-NODE ship stage (upstream of the data API)
+Before a file can become a data-API record it must be SHIPPED off-node by the
+`wes-upload-agent` DaemonSet. When a plugin logs "uploaded" but nothing appears in the
+data API, the break may be HERE — not your code, not NRP storage. Diagnose on the node
+(VSN-prefixed SSH, e.g. `ssh USER@node-<VSN>.sage`):
+1. **File still staged?** Look for FILES, not dirs:
+   `sudo find /media/plugin-data/uploads/<Job>/<task>/<version>/ -type f` (leaf shape
+   `[<job>/]<plugin>/<version>/<ts>-<sha1>/{data,meta}`). Empty leaf/parent dirs left
+   after a ship are NORMAL — checking dirs gave a FALSE "STILL_STAGED" this session.
+2. **Read `meta`** — proves producer identity (`vsn`,`node_id`,`filename`,`task`) even
+   before the ship lands (e.g. injected-env `vsn=H00F`).
+3. **Agent log** `sudo kubectl -n default logs <upload-agent-pod> --tail=N`:
+   healthy = `uploading: ./<path>`→`done:`→`cleaning up:` at ~MB/s. BROKEN = `Authenticated
+   to beehive-upload-server` then `rsync hasn't made progress in 15s... sending
+   interrupt!` each cycle + `rm: can't remove '/tmp/rsync_healthy'`; a high RESTARTS
+   count (saw 154) corroborates chronic ship failure.
+4. **Verdict — separate "my code" from "node can't ship":** if the staged `{data,meta}`
+   exist with correct meta, the `data` EXIF/content is right, and the agent logs
+   `uploading: ./<your path>` + auth SUCCESS but then the rsync STALL → the PRODUCER
+   side is PROVEN; the gap is node upload-health (report to infra). Auth/DNS OK while
+   bulk transfer stalls = node↔Beehive throughput/MTU/server-side issue, not your change.
+5. Once the agent is healthy, a re-run ships clean and the object appears in the
+   data-API query (allow sub-5-min propagation lag above).
+
+### PITFALL: agent SILENTLY skips a bad version path-segment
+The agent's `find` only selects staged dirs whose `<version>` segment matches
+`x.y.z | vx.y.z | latest | test`. `pluginctl run <image>` takes that segment from the
+IMAGE TAG, so a dev tag like `:gate3` → `.../<plugin>/gate3/<ts-sha>/` is REJECTED: the
+file stages, the plugin logs "uploaded", the agent never ships it (log shows "uploaded
+all files found" while your dir sits). Fix: retag `:test` (or real `x.y.z`) and re-run.
+Also in `pluginctl-sideload-and-node-build`.
 
 ## One honest caveat to always state
 Even when the verdict is "resolved," note the residual sub-5-min propagation lag

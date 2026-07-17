@@ -1,6 +1,6 @@
 # Node identity sourcing + pywaggle upload contract (VERIFIED)
 
-Verified 2026-07 against [pywaggle](https://github.com/waggle-sensor/pywaggle) source + a live H00F pod. These are durable
+Verified 2026-07 against pywaggle source + a live H00F pod. These are durable
 platform facts a plugin author needs to get provenance and uploads right.
 
 ## Node identity is NOT in pod environment variables
