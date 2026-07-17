@@ -13,7 +13,9 @@ Every participant has their **own Linux account** on the Thor. Hermes installs i
 | [Part 3 — Transferring the brain](#part-3-transferring-the-brain) | Share agent config or move to a new machine via profile distribution |
 | [Comparison](#inference-options-compared) | Choosing between inference approaches |
 | [Switching between approaches](#switching-between-approaches) | Swap providers without reinstalling |
+| [Hermes web dashboard](#hermes-web-dashboard) | Browser UI on your laptop via SSH tunnel + `hermes dashboard` |
 | [Token economy](#token-economy) | Manage context, cost, and fair use across providers |
+| [Updating the knowledge graph](#updating-the-knowledge-graph) | Refresh Graphify after skills/docs change (`/graphify … --update`) |
 
 **Docs:** [Hermes Documentation](https://hermes-agent.nousresearch.com/docs/) · [Profile Distributions](https://hermes-agent.nousresearch.com/docs/user-guide/profile-distributions)
 
@@ -869,6 +871,47 @@ If using the camp profile, you can also edit `~/.hermes/profiles/sage/.env` and 
 
 ---
 
+# Hermes web dashboard
+
+The [Hermes web dashboard](https://hermes-agent.nousresearch.com/docs/user-guide/features/web-dashboard) is a browser UI for sessions, config, skills, and chat. On Thor there is no local browser — keep the dashboard bound to **localhost on the Thor** and open it on your **laptop** through an SSH tunnel.
+
+## 1. Port-forward from your laptop
+
+In a **local** terminal (not on the Thor), forward port `9119`:
+
+```bash
+ssh -L 9119:127.0.0.1:9119 your-linux-user@thor-host
+```
+
+Leave that SSH session open while you use the dashboard. Optional background tunnel (no remote shell):
+
+```bash
+ssh -f -N -L 9119:127.0.0.1:9119 your-linux-user@thor-host
+```
+
+## 2. Start the dashboard on the Thor
+
+```bash
+# Use the sage profile if that is your active camp profile:
+hermes -p sage dashboard --host 127.0.0.1 --port 9119 --no-open
+# or, if sage is already the active profile / alias:
+hermes dashboard --host 127.0.0.1 --port 9119 --no-open
+```
+
+`--no-open` skips trying to launch a browser on the headless Thor.
+
+## 3. Open it on your laptop
+
+In your laptop browser:
+
+```text
+http://127.0.0.1:9119 #or http://localhost:9119
+```
+
+When finished, stop the dashboard (`Ctrl-C` on the Thor) and close the SSH tunnel.
+
+---
+
 # Token economy
 
 A practical guide for using context, compute, and provider quotas responsibly during summer camp. Covers `/usage`, `/compress`, provider switching costs, and **Thor-specific Ollama context** (why the first turn can take minutes on `gemma4:31b`).
@@ -876,6 +919,8 @@ A practical guide for using context, compute, and provider quotas responsibly du
 **Full guide:** [token-economy.md](token-economy.md)
 
 **Thor quick fix:** if your first Hermes response takes 3+ minutes, run [Step 4B — Cap Ollama context](#step-4b--cap-ollama-context-recommended) before blaming the agent.
+
+---
 
 # Updating The Knowledge Graph
 
@@ -901,3 +946,4 @@ $ git add graphify-out.tar.gz
 $ git commit -m "Update knowledge graph"
 $ git push
 ```
+---
