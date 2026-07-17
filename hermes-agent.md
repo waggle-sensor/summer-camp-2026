@@ -876,3 +876,28 @@ A practical guide for using context, compute, and provider quotas responsibly du
 **Full guide:** [token-economy.md](token-economy.md)
 
 **Thor quick fix:** if your first Hermes response takes 3+ minutes, run [Step 4B — Cap Ollama context](#step-4b--cap-ollama-context-recommended) before blaming the agent.
+
+# Updating The Knowledge Graph
+
+After adding/changing skills or docs **with a graph already built** → use skill **`graphify`**'s update flow using **`.venv-graphify`**. 
+>NOTE: **`setup-graphify.sh --rebuild` is start-from-scratch only**, not for incremental adds.
+
+Run the following skill to update the knowledge graph using your agent:
+
+```bash
+/graphify summer-camp-2026/hermes-profile/graphify-out --update
+```
+
+This will update the knowledge graph using your agent. To push the knowledge graph to the remote repository compressed into a tarball, run the following command:
+
+```bash
+$ tar -czvf graphify-out.tar.gz graphify-out
+```
+
+This will create a tarball of the knowledge graph. You can then push this tarball to the remote repository using the following command:
+
+```bash
+$ git add graphify-out.tar.gz
+$ git commit -m "Update knowledge graph"
+$ git push
+```
