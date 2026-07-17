@@ -226,7 +226,7 @@ PersistentKeepalive = 25
 PublicKey = qTFbhaYXOwjqfIVzqgHwHMD59e/ny9Gr47W2yOnjSnk=
 ```
 
-7. Name the configuration and click **Apply**. The router is now connected to the Sage VPN.
+7. Name the configuration and click **Apply** and **Start**. The router is now connected to the Sage VPN.
 
 8. Go to **VPN → VPN Dashboard**, click **Global Proxy**, and switch it to **Auto Detect**. This ensures only traffic intended for the Sage network goes through the VPN — all other traffic uses your regular internet connection.
    <img width="1270" height="432" alt="image" src="https://github.com/user-attachments/assets/9dea58fe-90fb-412c-bb89-42cab2c72997" />
