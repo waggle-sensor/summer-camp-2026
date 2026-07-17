@@ -47,6 +47,7 @@ Auth tokens: get from `portal.sagecontinuum.org/account/access`. Format: `Author
 **Official docs (prefer these URLs when citing Sage):**
 - **Full docs catalog (summary + URL for every page):** `references/sage-docs-index.md` — pick a URL, then fetch the live page for full content
 - **Public code catalog (`waggle-sensor` org):** `references/waggle-sensor-repos-index.md` — summary + URL per public repo (private skipped)
+- **Public code catalog (`sagecontinuum` org):** `references/sagecontinuum-repos-index.md` — summary + URL per public repo (private skipped)
 - **NVIDIA Jetson Thor / JetPack docs catalog:** `references/nvidia-jetson-thor-docs-index.md` — product + JetPack + Jetson Linux r39.2 Developer Guide (summary + URL; prefer Thor pages)
 - **NVIDIA agent skills (vendored):** `references/nvidia-skills-index.md` — [NVIDIA/skills](https://github.com/NVIDIA/skills) (`jetson-*`, DeepStream, TAO, …)
 - **DuckDB docs catalog:** `references/duckdb-docs-index.md` — [duckdb.org/docs](https://duckdb.org/docs/current/) summary + URL (Python/CLI, SQL, CSV/Parquet, guides)
@@ -516,7 +517,7 @@ Large files (images, audio): stored on Open Storage Network (S3-compatible objec
 
 ## GitHub Organizations
 
-- `sagecontinuum` — 26+ repos (sage-data-client, sage-gui, sage-cli, sesctl, beekeeper)
+- `sagecontinuum` — public repo catalog: `references/sagecontinuum-repos-index.md` (sage-data-client, sage-gui, sage-storage-*, sage-object-store, …; private skipped)
 - `waggle-sensor` — public repo catalog: `references/waggle-sensor-repos-index.md`; **pywaggle SDK:** <https://github.com/waggle-sensor/pywaggle> (also waggle-edge-stack, edge-scheduler / pluginctl+sesctl, plugin-base, virtual-waggle, sage-mcp)
 
 ## Hermes Native MCP Integration
@@ -740,6 +741,7 @@ Docker image naming: `registry.sagecontinuum.org/<user>/<plugin-name>:<version>`
 - **`references/auth-api-manifests-and-nodes.md`** — `auth.sagecontinuum.org` manifests + `api/v-beta/nodes` (+ `/computes/`, `/sensors/`): URL, auth, field-level descriptions; source [waggle-auth-app](https://github.com/waggle-sensor/waggle-auth-app)
 - **`references/sage-docs-index.md`** — catalog of every page under [sagecontinuum.org/docs](https://sagecontinuum.org/docs/getting-started): title, summary, URL (fetch live for full content)
 - **`references/waggle-sensor-repos-index.md`** — catalog of **public** repos under [github.com/orgs/waggle-sensor](https://github.com/orgs/waggle-sensor/repositories): summary + URL (clone/browse for source; private repos omitted)
+- **`references/sagecontinuum-repos-index.md`** — catalog of **public** repos under [github.com/orgs/sagecontinuum](https://github.com/orgs/sagecontinuum/repositories): summary + URL (private repos omitted; many edge-stack tools live under `waggle-sensor` instead)
 - **Edge apps (tutorial series):** <https://sagecontinuum.org/docs/category/edge-apps>
 - **pluginctl:** <https://sagecontinuum.org/docs/reference-guides/pluginctl> · <https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/pluginctl>
 - **sesctl:** <https://sagecontinuum.org/docs/reference-guides/sesctl> · <https://github.com/waggle-sensor/edge-scheduler/tree/main/docs/sesctl>
