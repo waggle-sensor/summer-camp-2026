@@ -936,13 +936,13 @@ Run the following skill to update the knowledge graph using your agent:
 This will update the knowledge graph using your agent. To push the knowledge graph to the remote repository compressed into a tarball, run the following command:
 
 ```bash
-$ tar -czvf graphify-out.tar.gz graphify-out
+$ tar -czvf graphify-baseline.tar.gz graphify-out
 ```
 
 This will create a tarball of the knowledge graph. You can then push this tarball to the remote repository using the following command:
 
 ```bash
-$ git add graphify-out.tar.gz
+$ git add graphify-baseline.tar.gz
 $ git commit -m "Update knowledge graph"
 $ git push
 ```
