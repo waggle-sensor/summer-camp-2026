@@ -123,6 +123,8 @@ The camp maintains a Hermes **profile distribution** in this repo at [`hermes-pr
 | SOUL.md, AGENTS.md, config.yaml, skills/, docs/, scripts/, mcp.json | `memories/`, `sessions/`, `auth.json`, `.env` |
 | Updated via `hermes profile update` | Preserved across updates — your brain stays isolated |
 
+> see [agent-knowledge-graph](hermes-profile/agent-knowledge-graph.html) for a visual representation of the agent's baseline knowledge. As your agent learns, the graph will be updated with new knowledge in path-to-profile/graphify-out/graph.html.
+
 ### Install from local clone (recommended)
 
 `hermes profile install github.com/org/repo` clones the **repo root** as the distribution — it does not support subpaths. Since the profile lives inside this monorepo, clone first:
@@ -940,8 +942,9 @@ Examples: `$HOME/.hermes/profiles/sage` or `$HOME/summer-camp-2026/hermes-profil
 To refresh the shipped camp baseline after a rebuild, from the profile root:
 
 ```bash
+cp graphify-out/graph.html agent-knowledge-graph.html
 tar -czf graphify-baseline.tar.gz graphify-out
-git add graphify-baseline.tar.gz
+git add agent-knowledge-graph.html graphify-baseline.tar.gz
 git commit -m "Update knowledge graph baseline"
 git push
 ```
