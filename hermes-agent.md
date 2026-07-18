@@ -1,5 +1,4 @@
 # Hermes Agent Setup Guide
->NOTE: This is stil in development, so go ahead and try it out and let us know if you have any issues.
 
 Run **Hermes Agent on your Thor** — your laptop is only an SSH client. Hermes handles files, terminal, and tools on the Thor; inference runs on the same machine via **Ollama** (Part 1) or over HTTPS to **NVIDIA Build** (Part 2) or **NRP Managed LLMs** (Part 2B).
 
