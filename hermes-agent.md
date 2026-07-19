@@ -150,9 +150,11 @@ hermes profile install ./hermes-profile --name sage --alias
 ```bash
 hermes profile use sage
 cp ~/.hermes/profiles/sage/.env.EXAMPLE ~/.hermes/profiles/sage/.env
-# Edit .env if needed — add NVIDIA_API_KEY (nvapi-...) for Part 2; leave blank for Thor+Ollama
+# Edit .env if needed — add API keys for Part 2; leave blank for Thor+Ollama
 hermes profile info sage
 hermes doctor
+
+hermes setup tools #(optional) if you want to configure more tools
 ```
 
 Launch with `hermes`.
