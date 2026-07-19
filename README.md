@@ -71,7 +71,6 @@ By the end of the week, every participant should have:
 - Created an ECR app (if applicable)
 - Created a poster of your work
 - A simple review of the course.. The good, the bad, the exciting
-<img width="512" height="288" alt="image" src="https://github.com/user-attachments/assets/b1724bab-f4e7-4360-9b80-e70d974fa6e6" />
 - Contributed your Hermes agent brain — contributed your knowledge to [`hermes-profile/`](hermes-profile/) so the shared Sage agent can be updated for future users ([details](hermes-agent.md#end-of-camp--contribute-your-brain-required))
 
 ---
