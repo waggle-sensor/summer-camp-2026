@@ -27,7 +27,8 @@ Bring a laptop set up for local Python development — some exercises require ru
 
 | Time | Activity |
 |---|---|
-| 8:00 AM – 9:30 AM | Open hacking / independent work |
+| 8:00 AM – 9:15 AM | Open hacking / independent work |
+| 9:15 AM - 9:30 AM | In seats, Q&A |
 | 9:30 AM – 12:30 PM | Morning session (3 hrs) |
 | 12:30 PM – 1:30 PM | Lunch (on your own) |
 | 1:30 PM – 4:30 PM | Afternoon session (3 hrs) |
