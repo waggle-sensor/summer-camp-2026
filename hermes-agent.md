@@ -793,15 +793,23 @@ ls ~/.hermes/profiles/sage/skills/
 cat ~/.hermes/profiles/sage/memories/MEMORY.md   # if you wrote memories
 ```
 
-2. **Export your brain** to a tarball:
+2. **Refresh the Graphify graph**. In a Hermes session:
+
+```text
+/graphify ~/.hermes/profiles/sage --update
+```
+
+(Use your real profile path if it differs — Hermes CWD is often `$HOME`, so pass an absolute path.)
+
+3. **Export your brain** to a tarball:
 
 ```bash
 hermes profile export sage -o ~/sage-brain-export.tar.gz
 ```
 
-3. **Transfer the tarball** to an instructor — never post it in public channels.
+4. **Transfer the tarball** to an instructor — never post it in public channels.
 
-4. **Instructors will extract shareable knowledge** and open PRs on your behalf.
+5. **Instructors will extract shareable knowledge** and open PRs on your behalf.
 
 ## Same-machine backup (profile export/import)
 
