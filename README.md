@@ -52,14 +52,6 @@ Bring a laptop set up for local Python development — some exercises require ru
 - **Tue AM, Jul 28 — Development, Testing & Prep**
 - **Tue PM, Jul 28 — Project Presentations & Demos:** Show off your project, then dinner and farewell.
 
-## Potential Hackathon Projects
-
-Already have a project idea? Bring it. If not, here's an example to get you started:
-
-**Image Search at the Edge** — Translate an NRP Kubernetes config into a `pluginctl` setup, swap in edge-friendly models (e.g., Gemma4), replace the vector database with an edge-compatible option (e.g., NVIDIA's NanoDB), and run benchmarks. Creative twist: pivot from "image search" to generating daily/weekly summaries of what the node sees.
-
-More project topics will be announced based on participant interests.
-
 ## Baseline Deliverables
 
 By the end of the week, every participant should have:
