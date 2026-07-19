@@ -130,7 +130,7 @@ The camp maintains a Hermes **profile distribution** in this repo at [`hermes-pr
 `hermes profile install github.com/org/repo` clones the **repo root** as the distribution — it does not support subpaths. Since the profile lives inside this monorepo, clone first:
 
 ```bash
-git clone https://github.com/FranciscoLozCoding/summer-camp-2026.git
+git clone https://github.com/waggle-sensor/summer-camp-2026.git
 #git checkout <branch> #if desired
 cd summer-camp-2026
 hermes profile install ./hermes-profile --name sage --alias
@@ -727,12 +727,9 @@ SSH into the new Thor as your Linux user, install the Hermes CLI ([Part 1, Step 
 
 ```bash
 # From the camp repo
-git clone https://github.com/FranciscoLozCoding/summer-camp-2026.git
+git clone https://github.com/waggle-sensor/summer-camp-2026.git
 cd summer-camp-2026
 hermes profile install ./hermes-profile --name sage --alias
-
-# Or directly from git (standalone profile repo)
-hermes profile install github.com/FranciscoLozCoding/<profile-repo> --name sage --alias
 ```
 
 Fill in your credentials and verify:

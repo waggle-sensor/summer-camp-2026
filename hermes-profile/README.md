@@ -46,7 +46,7 @@ hermes-profile/
 ## Install
 
 ```bash
-git clone https://github.com/FranciscoLozCoding/summer-camp-2026.git
+git clone https://github.com/waggle-sensor/summer-camp-2026.git
 cd summer-camp-2026
 hermes profile install ./hermes-profile --name sage --alias
 hermes profile use sage
