@@ -136,14 +136,6 @@ cd summer-camp-2026
 hermes profile install ./hermes-profile --name sage --alias
 ```
 
-### Install from standalone git repo (alternative)
-
-If `hermes-profile/` is published as its own repository:
-
-```bash
-hermes profile install github.com/FranciscoLozCoding/sage-hermes --alias
-```
-
 ### What happens on install
 
 1. Copies distribution files into `~/.hermes/profiles/sage/`
