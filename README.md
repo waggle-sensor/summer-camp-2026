@@ -129,24 +129,51 @@ To set up your personal agent, follow the instructions in the [Hermes Agent Setu
 
 A total of 4 devices act as remote sensors that are connected to Sage nodes via WireGuard.
 
-## UIC Sage Blades
+## UIC / Sage Blades
 
-| Device Name | Location | Notes |
+| Device Name | Location | Sensors |
 |---|---|---|
-| UIC06 / H023 | TBD | TBD |
-| UIC07 / H022 | TBD | TBD |
-| UIC03 / H021 | TBD | TBD |
-| UIC05 / H020 | TBD | TBD |
-| UIC04 / H01F | TBD | TBD |
-| UIC02 / H01E | TBD | TBD |
-| UIC02 / H01D | TBD | TBD |
+| ANLT1 / H00F | Sage Blade Room | TBD |
+| H02A | Sage Blade Room | TBD |
+| H02C | Sage Blade Room | TBD |
+| H02D | Sage Blade Room | TBD |
+| H02E | Sage Blade Room | TBD |
+| H02F | Sage Blade Room | TBD |
+| H030 | Sage Blade Room | TBD |
+| H031 | Sage Blade Room | TBD |
+| H032 | Sage Blade Room | TBD |
+| H033 | Sage Blade Room | TBD |
+| H034 | Sage Blade Room | TBD |
+| H035 | Sage Blade Room | TBD |
+| H037 | Sage Blade Room | TBD |
+| H038 | Sage Blade Room | TBD |
+| H039 | UIC Blade Room | TBD |
+| H03A | Sage Blade Room | TBD |
+| H03B | Sage Blade Room | TBD |
+| H03C | Sage Blade Room | TBD |
+| H03D | Sage Blade Room | TBD |
+| H03E | Sage Blade Room | TBD |
+| H03F | Sage Blade Room | TBD |
+| H040 | Sage Blade Room | TBD |
+| H041 | UIC Blade Room | TBD |
+| H042 | Sage Blade Room | TBD |
+| H043 | UIC Blade Room | TBD |
+| UIC01 / H014 | UIC Blade Room | TBD |
+| UIC02 / H01D | UIC Blade Room | TBD |
+| UIC03 / H01E | UIC Blade Room | TBD |
+| UIC04 / H01F | UIC Blade Room | TBD |
+| UIC05 / H020 | UIC Blade Room | TBD |
+| UIC06 / H021 | UIC Blade Room | TBD |
+| UIC07 / H022 | UIC Room | TBD |
+| UIC08 / H023 | UIC Blade Room | TBD |
+| UICTT / H00B | Sage Blade Room | TBD |
+
+
+
 
 *(Access instructions TBD — likely handled through Sage.)*
 
 ## Tools / Devices
-
-#### Devices
-*(device table goes here)*
 
 #### EdgeRunner
 *(tutorial goes here)*
