@@ -22,7 +22,7 @@ This guide explains how to set up a weather station using an industrial Raspberr
 
 ## System Architecture
 
-<img width="1920" height="1500" alt="System Architecture Diagram" src="https://github.com/user-attachments/assets/6c17cc54-9f8c-43af-a884-2938d233a5d2" />
+<img width="1920" height="1500" alt="3" src="https://github.com/user-attachments/assets/1e1eab7e-6917-4344-8e68-15314522920d" />
 
 ---
 
@@ -54,21 +54,19 @@ Follow the system architecture diagram above for reference throughout this secti
    - **Orange** — Ground (Pin 5)
    - **Blue** — Ground (Pin 6)
 
-<!-- QUESTION: How much should participants strip from each wire? A length (e.g., ~5mm) would help avoid under/over-stripping. -->
-
 **0.6.** Using the RPi's Phoenix connector ports:
-   - Connect the **White** wire to port **A4**.
-   - Connect the **Green** wire to port **B4**.
+   - Connect the **White** wire to port **A3**.
+   - Connect the **Green** wire to port **B3**.
 
 **0.7.** Bundle the **Black**, **Orange**, and **Blue** wires together into a lever wire connector. Run a single black wire out of the connector and into the **24V DC Out Negative** port on the PoE++ Splitter.
 
-**0.8.** Run a blue wire out of the lever wire connector into the **GND port** (located below B4) on the RPi using the Phoenix connector ports.
+**0.8.** Run a blue wire out of the lever wire connector into the **GND port** (located below B3) on the RPi using the Phoenix connector ports.
 
 **0.9.** Connect the **Red** wire from the external cable (part number 80959) into the **24V DC Out Positive** port on the PoE++ Splitter.
 
 Completed wiring should look like this:
 
-<img width="2268" height="4032" alt="Wiring photo" src="https://github.com/user-attachments/assets/6164b190-ce08-4358-95df-1a681d5bef08" />
+<img width="1920" height="1500" alt="4" src="https://github.com/user-attachments/assets/83756444-8f76-4317-8c72-1df3280efd4d" />
 
 ---
 
@@ -392,5 +390,3 @@ You should see a confirmation message indicating the device has been bound succe
 <!-- QUESTION: What happens on the client (blade) side — does the blade also need usbip installed, and is there a corresponding `usbip attach` command to run there? If so, that step should be documented here as well. -->
 
 ---
-
-*More steps coming — work in progress.*
