@@ -164,7 +164,7 @@ A total of 4 devices act as remote sensors that are connected to Sage nodes via 
 | UIC04 / H01F | UIC Blade Room | TBD |
 | UIC05 / H020 | UIC Blade Room | TBD |
 | UIC06 / H021 | UIC Blade Room | TBD |
-| UIC07 / H022 | UIC Room | TBD |
+| UIC07 / H022 | UIC Blade Room | TBD |
 | UIC08 / H023 | UIC Blade Room | TBD |
 | UICTT / H00B | Sage Blade Room | TBD |
 
@@ -176,16 +176,19 @@ A total of 4 devices act as remote sensors that are connected to Sage nodes via 
 ## Tools / Devices
 
 #### EdgeRunner
-*(tutorial goes here)*
+[Edgerunner](EdgeRunner-Setup.md)
+
+#### Industrial Raspberry Pi Setup 
+[RPi set up](RPi-and-Sensors-Setup.md)
 
 #### RPi Weather Station
-*(access instructions go here)*
+[Weather station set up](RPi-and-Sensors-Setup.md)
 
 #### RPi USB Sensor
-*(access instructions go here)*
+[RPi USB sensors set up](RPi-and-Sensors-Setup.md)
 
 #### WireGuard Remote Cameras
-*(access instructions go here)*
+[camera + WireGaurd Setup Guide](RPi-and-Sensors-Setup.md)
 
 #### 3D Printing
 Fan / air circulation.
